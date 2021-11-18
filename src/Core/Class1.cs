@@ -1,4 +1,4 @@
-﻿namespace Marknotes.Core;
+﻿namespace MarkNotes.Core;
 public class Class1
 {
 
