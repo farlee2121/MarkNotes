@@ -81,3 +81,17 @@ IDEA: I could also take in a config file that specifies the operation(s), input 
 
 REQ: should also be consume-able as a library. It's likely that I'll want to use this for building interactive experiences in the future (browse by meta, view ranked readings, etc)
 
+TODO: create a good name to publish the tool with
+- MarkNotes?
+
+IDEA: dynamically generate a todo list based off one or more markdown files (TODO tag, maybe also checklists under a todo label)
+
+
+## Next Steps
+- [ ] Finish transition to project format from csx
+- [ ] Create test cases for my expected tag scenarios
+- [ ] Run actual extraction to get my book meta notes
+- [ ] Package Expecto.TestApi so I can use it as a nuget package (Maybe call it Expecto.TestEnvironment)
+- [ ] Add console interface
+- [ ] Package as dotnet tool
+  - [ ] be sure to use a preview semantic version
