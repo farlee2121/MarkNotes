@@ -53,6 +53,15 @@ public void Walk<T>(T rootNode, Func<T, IEnumerable<T>> getChildren, Action<T> n
     }
 }
 
+public IEnumerable<T> Collect<T>(T rootNode, Func<T, IEnumerable<T>> getChildren, Func<T, bool> test){
+    List<T> collected = new List<T>();
+    Walk(rootNode, getChildren, (node) => {
+        if(test(node)) collected.Add(node);
+    });
+
+    return collected;
+}
+
 void TestTree()
 {
     var testTree = new Branch(new TreeNode[] {new Leaf<int>(1),
