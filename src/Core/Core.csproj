@@ -4,8 +4,8 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <AssemblyName>MarkNotes.Core</AssemblyName>
-    <RootNamespace>MarkNotes.Core</RootNamespace>
+    <AssemblyName>Notedown.Core</AssemblyName>
+    <RootNamespace>Notedown.Core</RootNamespace>
   </PropertyGroup>
 
 </Project>

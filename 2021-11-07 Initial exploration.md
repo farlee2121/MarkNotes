@@ -83,6 +83,8 @@ REQ: should also be consume-able as a library. It's likely that I'll want to use
 
 TODO: create a good name to publish the tool with
 - MarkNotes?
+- Notedown?
+- Tagdown?
 
 IDEA: dynamically generate a todo list based off one or more markdown files (TODO tag, maybe also checklists under a todo label)
 

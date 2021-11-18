@@ -5,8 +5,8 @@
 
     <IsPackable>false</IsPackable>
     <GenerateProgramFile>false</GenerateProgramFile>
-	  <AssemblyName>MarkNotes.Core.Tests</AssemblyName>
-	  <RootNamespace>MarkNotes.Core.Tests</RootNamespace>
+	  <AssemblyName>Notedown.Core.Tests</AssemblyName>
+	  <RootNamespace>Notedown.Core.Tests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
