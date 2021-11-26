@@ -41,7 +41,7 @@ public static void EnqueueRange<T>(this Queue<T> queue, IEnumerable<T> range)
 }
 
 
-public void Walk<T>(T rootNode, Func<T, IEnumerable<T>> getChildren, Action<T> nodeAction)
+public static void Walk<T>(T rootNode, Func<T, IEnumerable<T>> getChildren, Action<T> nodeAction)
 {
     Queue<T> unwalked = new Queue<T>();
     unwalked.Enqueue(rootNode);
@@ -53,13 +53,22 @@ public void Walk<T>(T rootNode, Func<T, IEnumerable<T>> getChildren, Action<T> n
     }
 }
 
-public IEnumerable<T> Collect<T>(T rootNode, Func<T, IEnumerable<T>> getChildren, Func<T, bool> test){
+public static IEnumerable<T> Collect<T>(T rootNode, Func<T, IEnumerable<T>> getChildren, Func<T, bool> test){
     List<T> collected = new List<T>();
     Walk(rootNode, getChildren, (node) => {
         if(test(node)) collected.Add(node);
     });
 
     return collected;
+}
+
+public static TAgg Fold<TNode, TAgg>(TNode rootNode, Func<TNode, IEnumerable<TNode>> getChildren, Func<TAgg,TNode,TAgg> accumulate, TAgg initial)
+{
+    TAgg aggregate = initial;
+    Walk(rootNode, getChildren, (TNode node) => {
+        aggregate = accumulate(aggregate, node);
+    });
+    return aggregate;
 }
 
 void TestTree()
