@@ -2,10 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
     <AssemblyName>Notedown.Core</AssemblyName>
     <RootNamespace>Notedown.Core</RootNamespace>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="TreeUtils.fs" />
+  </ItemGroup>
 
 </Project>

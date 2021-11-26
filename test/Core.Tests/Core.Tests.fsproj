@@ -10,12 +10,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Tests.fs" />
+    <Compile Include="TreeUtilityTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../src/Core/Core.csproj" />
+    <ProjectReference Include="../../src/Core/Core.fsproj" />
   </ItemGroup>
 
   <ItemGroup>
