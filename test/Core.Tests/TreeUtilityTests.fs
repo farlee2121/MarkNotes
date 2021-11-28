@@ -1,8 +1,10 @@
-module Tests
+module TreeUtilityTests
 
-open System
 open Expecto
 open Notedown.Core
+open Swensen
+
+let unquote = Unquote.Assertions.test
 
 
 type Tree<'LeafData,'INodeData> =
@@ -30,6 +32,6 @@ let treeUtilityTests =
 
         let actualLeaves = TreeUtils.fold tree getChildren flatten []
 
-        Expect.equal actualLeaves [1;2;3;4;5;6] ""
+        unquote <@ actualLeaves = [1;2;3;4;5;6] @>
     }
   ]
