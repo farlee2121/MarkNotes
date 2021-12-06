@@ -8,6 +8,8 @@
 
   <ItemGroup>
     <Compile Include="TreeUtils.fs" />
+    <Compile Include="TagExtraction.fs" />
+    <PackageReference Include="Markdig" Version="0.26.0" />
   </ItemGroup>
 
 </Project>

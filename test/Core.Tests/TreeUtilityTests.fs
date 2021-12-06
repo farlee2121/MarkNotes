@@ -30,7 +30,7 @@ let treeUtilityTests =
           | LeafNode value -> List.append agg [value]
           | InternalNode _ -> agg
 
-        let actualLeaves = TreeUtils.fold tree getChildren flatten []
+        let actualLeaves = TreeUtils.fold getChildren flatten tree []
 
         unquote <@ actualLeaves = [1;2;3;4;5;6] @>
     }

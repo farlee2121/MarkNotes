@@ -32,6 +32,5 @@ let extractTagsTests =
     test "Given a tagged line followed by a list with space between When I extract tagged content Then only the line is extracted"{
         raise (NotImplementedException())
     }
-    
-    
+       
   ]
