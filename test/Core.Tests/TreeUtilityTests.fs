@@ -2,9 +2,7 @@ module TreeUtilityTests
 
 open Expecto
 open Notedown.Core
-open Swensen
-
-let unquote = Unquote.Assertions.test
+open UnquoteAliases
 
 
 type Tree<'LeafData,'INodeData> =

@@ -1,15 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>Notedown.Core</AssemblyName>
     <RootNamespace>Notedown.Core</RootNamespace>
   </PropertyGroup>
-
   <ItemGroup>
     <Compile Include="TreeUtils.fs" />
     <Compile Include="TagExtraction.fs" />
     <PackageReference Include="Markdig" Version="0.26.0" />
   </ItemGroup>
-
 </Project>

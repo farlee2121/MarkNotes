@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="UnquoteAliases.fs" />
     <Compile Include="TreeUtilityTests.fs" />
     <Compile Include="TagExtractionTests.fs" />
     <Compile Include="Program.fs" />

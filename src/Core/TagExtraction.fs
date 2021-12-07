@@ -7,6 +7,13 @@ let blockToMarkdownText (source:string) (markdownNode:MarkdownObject) =
     let span = markdownNode.Span
     source.Substring (span.Start, span.Length)
 
+let blocksToDocument (source:string) (markdownBlocks: MarkdownObject seq) = 
+    let join (separator:string) (segments:string seq) = System.String.Join(separator, segments)
+    
+    markdownBlocks
+    |> Seq.map (blockToMarkdownText source)
+    |> (join "\n")
+
 let getSectionWithContents (document:MarkdownDocument) (heading:HeadingBlock) =
 
     let isEqualOrLesserToHeading (heading:HeadingBlock) (block: Block) =
@@ -36,7 +43,7 @@ let isTaggedHeading (blockToMarkdownText':MarkdownObject -> string) (keyPhrases:
         isMatch
     | _ -> false
 
-let extractTaggedSections (markdown: string) (tags: string list) =
+let extractTaggedSections (tags: string list) (markdown: string) =
     // TODO: i probably want to find a pipeline arrangement where the document doesn't need parsed more than once for different kinds of tasks
     //      Probably clearest to just take a parsed document as an option 
     //      consideration: I probably want to preserve order of extractions across exraction types...
@@ -45,4 +52,5 @@ let extractTaggedSections (markdown: string) (tags: string list) =
     let isTaggedHeading' = isTaggedHeading (blockToMarkdownText markdown) tags
 
     TreeUtils.collect getChildren isTaggedHeading' ast
+
 
