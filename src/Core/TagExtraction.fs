@@ -3,30 +3,40 @@ open Markdig;
 open Markdig.Syntax;
 open Notedown.Core;
 
-let blockToMarkdownText (source:string) (markdownNode:MarkdownObject) =
-    let span = markdownNode.Span
+let private spanToText (source: string) (span:SourceSpan) =
     source.Substring (span.Start, span.Length)
 
-let blocksToDocument (source:string) (markdownBlocks: MarkdownObject seq) = 
-    let join (separator:string) (segments:string seq) = System.String.Join(separator, segments)
-    
-    markdownBlocks
-    |> Seq.map (blockToMarkdownText source)
-    |> (join "\n")
+let blockToMarkdownText (source:string) (markdownNode:MarkdownObject) =
+    spanToText source markdownNode.Span
+
+let private computeContainingSpan (blocks: MarkdownObject seq) =
+    let spanStart =
+        blocks |> Seq.map (fun block -> block.Span.Start)
+        |> Seq.min
+
+    let spanEnd =
+        blocks |> Seq.map (fun block -> block.Span.End)
+        |> Seq.max
+
+    SourceSpan(spanStart, spanEnd)
 
 let getSectionWithContents (document:MarkdownDocument) (heading:HeadingBlock) =
 
+    let isSameBlock (left:Block) (right:Block) = (left.Span.Equals(right.Span))
     let isEqualOrLesserToHeading (heading:HeadingBlock) (block: Block) =
         match block with
         //STEP: stop on the next heading of equal or higher level. Conversely, include lower level headings.
-        | :? HeadingBlock as laterHeading -> (LanguagePrimitives.PhysicalEquality laterHeading heading) || not (laterHeading.Level <= heading.Level)
+        | :? HeadingBlock as laterHeading -> not (laterHeading.Level <= heading.Level)
         | _ -> true
-    
+
+    let isSectionContent (sectionHeading:HeadingBlock) (block: Block) =
+        ((isSameBlock sectionHeading block) || (isEqualOrLesserToHeading sectionHeading block))
+
     let headingWithContents =
         document
-        |> Seq.skipWhile (fun block -> not (LanguagePrimitives.PhysicalEquality block heading))
-        |> Seq.takeWhile (isEqualOrLesserToHeading heading)
-     
+        |> Seq.skipWhile (fun block -> not (isSameBlock block heading))
+        |> Seq.takeWhile (isSectionContent heading)
+
     headingWithContents
 
 
@@ -43,7 +53,7 @@ let isTaggedHeading (blockToMarkdownText':MarkdownObject -> string) (keyPhrases:
         isMatch
     | _ -> false
 
-let extractTaggedSections (tags: string list) (markdown: string) =
+let extractTaggedSectionsAsBlocks (tags: string seq) (markdown: string) =
     // TODO: i probably want to find a pipeline arrangement where the document doesn't need parsed more than once for different kinds of tasks
     //      Probably clearest to just take a parsed document as an option 
     //      consideration: I probably want to preserve order of extractions across exraction types...
@@ -52,5 +62,23 @@ let extractTaggedSections (tags: string list) (markdown: string) =
     let isTaggedHeading' = isTaggedHeading (blockToMarkdownText markdown) tags
 
     TreeUtils.collect getChildren isTaggedHeading' ast
+
+
+let extract (tags: string list) (markdownDocument: string) : string list=
+    //TODO: ast versus string usage is inconsistent
+    let parsedDocument = Markdown.Parse(markdownDocument)
+
+    let headingToSectionContentString headingBlock =
+        let blocks = getSectionWithContents parsedDocument headingBlock |> Seq.cast<MarkdownObject> 
+        spanToText markdownDocument (computeContainingSpan blocks)
+
+    let blockToMarkdownText' (block: MarkdownObject) =
+        match block with
+        | :? HeadingBlock as h -> headingToSectionContentString h         
+        | _ -> blockToMarkdownText markdownDocument block
+
+    extractTaggedSectionsAsBlocks tags markdownDocument
+    |> List.map blockToMarkdownText'
+    
 
 
