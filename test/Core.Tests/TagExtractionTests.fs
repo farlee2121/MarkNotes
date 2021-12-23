@@ -123,11 +123,12 @@ let extractTagsTests =
     test "GIVEN a tag in the middle of a paragraph Whe I extract tagged content THEN the whole paragraph is extracted"{
         let expectedTag = "BOOK:"
         let expectedContent = [
-            $"{expectedTag} This is a paragraph belonging with a [link](https://spencerfarley.com)."
-            $"Paragraph with the tag {expectedTag} in the middle"]
+            $"{expectedTag} This is a paragraph belonging with a [link](https://spencerfarley.com).";
+            $"Paragraph with the tag {expectedTag} in the middle"
+        ]
         let excludedContent= [
             "## Header";
-            "paragraph that is not tagged"
+            "paragraph that is not tagged";
             "# Higher header level"
         ]
 
@@ -136,7 +137,17 @@ let extractTagsTests =
         unquote <@ expectedContent = extractedContent @>
     }
     test "GIVEN a tag with any capitalization WHEN I extract tagged content THEN the line is extracted" {
-        raise (NotImplementedException())
+        let toTitleCase str = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(str)
+        let expectedTag = "BOOK:"
+        let expectedContent = [
+            $"{expectedTag.ToUpper()} upper case";
+            $"{expectedTag.ToLower()} lower case";
+            $"{toTitleCase expectedTag} lower case";
+            ]
+        let excludedContent= List.init 3 (fun i -> Guid.NewGuid().ToString())
+        let document = String.joinParagraphs (List.append excludedContent expectedContent)
+        let extractedContent = TagExtraction.extract [expectedTag] document
+        unquote <@ expectedContent = extractedContent @>
     }
 
     test "GIVEN a tagged line followed by a list with no space between WHEN I extract tagged content THEN the list is extracted with the line"{
