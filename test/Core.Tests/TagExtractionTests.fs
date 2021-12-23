@@ -17,6 +17,7 @@ module String =
         String.Join(separator, strings)
 
     let joinLines (strings: string seq) = join "\n" strings
+    let joinParagraphs (strings: string seq) = join "\n\n" strings
     let split (separator: string) (str: string) = 
         str.Split(separator)
 
@@ -100,17 +101,39 @@ let extractTagsTests =
         let excludedSections = ["## Equivalent header level"; "# Higher header level"]
 
         let document = String.joinLines (List.append [expectedSection] excludedSections)
-        let extractedContent = extractTagsAsOriginalText [expectedTag] document
-        unquote <@ expectedSection = extractedContent @>
+        let extractedContent = TagExtraction.extract [expectedTag] document
+        unquote <@ [expectedSection] = extractedContent @>
     }
 
 
 
-    test "GIVEN a tag at the start of a line WHEN I extract tagged content THEN the line is extracted" {
-        raise (NotImplementedException())
+    test "GIVEN a tag at the start of a paragraph WHEN I extract tagged content THEN the paragraph is extracted" {
+        let expectedTag = "BOOK:"
+        let expectedContent = [$"{expectedTag} This is a paragraph belonging with a [link](https://spencerfarley.com)."]
+        let excludedContent= [
+            "## Header";
+            "paragraph that is not tagged"
+            "# Higher header level"
+        ]
+
+        let document = String.joinParagraphs (List.append excludedContent expectedContent)
+        let extractedContent = TagExtraction.extract [expectedTag] document
+        unquote <@ expectedContent = extractedContent @>
     }
     test "GIVEN a tag in the middle of a paragraph Whe I extract tagged content THEN the whole paragraph is extracted"{
-        raise (NotImplementedException())
+        let expectedTag = "BOOK:"
+        let expectedContent = [
+            $"{expectedTag} This is a paragraph belonging with a [link](https://spencerfarley.com)."
+            $"Paragraph with the tag {expectedTag} in the middle"]
+        let excludedContent= [
+            "## Header";
+            "paragraph that is not tagged"
+            "# Higher header level"
+        ]
+
+        let document = String.joinParagraphs (List.append excludedContent expectedContent)
+        let extractedContent = TagExtraction.extract [expectedTag] document
+        unquote <@ expectedContent = extractedContent @>
     }
     test "GIVEN a tag with any capitalization WHEN I extract tagged content THEN the line is extracted" {
         raise (NotImplementedException())
@@ -123,5 +146,6 @@ let extractTagsTests =
     test "GIVEN a tagged line followed by a list with space between WHEN I extract tagged content THEN only the line is extracted"{
         raise (NotImplementedException())
     }
-       
+
+    // TODO: make sure we don't end up with multiple extraction
   ]

@@ -20,7 +20,7 @@ let private computeContainingSpan (blocks: MarkdownObject seq) =
 
     SourceSpan(spanStart, spanEnd)
 
-let getSectionWithContents (document:MarkdownDocument) (heading:HeadingBlock) =
+let getHeadingWithContents (document:MarkdownDocument) (heading:HeadingBlock) =
 
     let isSameBlock (left:Block) (right:Block) = (left.Span.Equals(right.Span))
     let isEqualOrLesserToHeading (heading:HeadingBlock) (block: Block) =
@@ -40,36 +40,42 @@ let getSectionWithContents (document:MarkdownDocument) (heading:HeadingBlock) =
     headingWithContents
 
 
-let isTaggedHeading (blockToMarkdownText':MarkdownObject -> string) (keyPhrases:string seq) (node:MarkdownObject) = 
+let private doesTextContainTag (keyPhrases:string seq) (text: string) =
     let normalizeText (str:string) = str.ToLower()
     let normalizedPhrases = Seq.map normalizeText keyPhrases
-    match node with
-    | :? HeadingBlock as h ->  
-        let headerText = blockToMarkdownText' h |> normalizeText
-        let isMatch = 
-            normalizedPhrases 
-            |> Seq.tryFind (fun phrase -> headerText.Contains (phrase)) 
-            |> Option.isSome
-        isMatch
-    | _ -> false
+    let headerText = text |> normalizeText
+    let isMatch = 
+        normalizedPhrases 
+        |> Seq.tryFind (fun phrase -> headerText.Contains (phrase)) 
+        |> Option.isSome
+    isMatch
 
-let extractTaggedSectionsAsBlocks (tags: string seq) (markdown: string) =
-    // TODO: i probably want to find a pipeline arrangement where the document doesn't need parsed more than once for different kinds of tasks
-    //      Probably clearest to just take a parsed document as an option 
-    //      consideration: I probably want to preserve order of extractions across exraction types...
+
+
+let reduceToTaggedBlocks (tags: string seq) (markdown: string) =
+
+    let isTaggedBlock (keyPhrases:string seq) (node:MarkdownObject) =
+        //NOTE: This could really be a separated into a list of predicates if I wanted it to be easy to configure / partially customize
+        match node with
+        | :? HeadingBlock as h ->
+            doesTextContainTag keyPhrases (blockToMarkdownText markdown h)
+        | :? ParagraphBlock as p ->
+            doesTextContainTag keyPhrases (blockToMarkdownText markdown p)
+        | _ -> false
+
     let ast = Markdown.Parse(markdown)
     let getChildren (block:MarkdownObject) = block.Descendants()
-    let isTaggedHeading' = isTaggedHeading (blockToMarkdownText markdown) tags
 
-    TreeUtils.collect getChildren isTaggedHeading' ast
+    TreeUtils.collect getChildren (isTaggedBlock tags) ast
+
 
 
 let extract (tags: string list) (markdownDocument: string) : string list=
-    //TODO: ast versus string usage is inconsistent
+    //TODO: ast versus string usage is inconsistent, probably a good scenario for a union + constructors
     let parsedDocument = Markdown.Parse(markdownDocument)
 
     let headingToSectionContentString headingBlock =
-        let blocks = getSectionWithContents parsedDocument headingBlock |> Seq.cast<MarkdownObject> 
+        let blocks = getHeadingWithContents parsedDocument headingBlock |> Seq.cast<MarkdownObject> 
         spanToText markdownDocument (computeContainingSpan blocks)
 
     let blockToMarkdownText' (block: MarkdownObject) =
@@ -77,7 +83,7 @@ let extract (tags: string list) (markdownDocument: string) : string list=
         | :? HeadingBlock as h -> headingToSectionContentString h         
         | _ -> blockToMarkdownText markdownDocument block
 
-    extractTaggedSectionsAsBlocks tags markdownDocument
+    reduceToTaggedBlocks tags markdownDocument
     |> List.map blockToMarkdownText'
     
 
