@@ -196,11 +196,28 @@ let extractTagsTests =
         }
 
         test "GIVEN an ordered list with a tagged item WHEN I extract tagged content THEN only the tagged bullet is extracted" {
-            raise (NotImplementedException())
+            let expectedTag = "BOOK:"
+            let expectedContent = [
+                $"1. {expectedTag} tagged item";
+            ]
+            let unexpectedContent= List.init 3 (fun i -> $"{(List.length expectedContent) + i + 1}. {Guid.NewGuid().ToString()}")
+            let document = String.joinLines (List.append expectedContent unexpectedContent )
+            let extractedContent = TagExtraction.extract [expectedTag] document
+            unquote <@ expectedContent = extractedContent @>
         }
 
         test "GIVEN a list with a tagged item that has children WHEN I extract tagged content THEN the tagged item is extracted with its children" {
-            raise (NotImplementedException())
+            let expectedTag = "BOOK:"
+            let expectedContent = [
+                $"- {expectedTag} tagged item \n\
+                  \t - sub item \n\
+                  \t - sub 2 \n\
+                ";
+            ]
+            let unexpectedContent= List.init 3 (fun i -> $"- {Guid.NewGuid().ToString()}")
+            let document = String.joinLines (List.append expectedContent unexpectedContent )
+            let extractedContent = TagExtraction.extract [expectedTag] document
+            unquote <@ expectedContent = extractedContent @>
         }
     ]
 
