@@ -64,6 +64,16 @@ Q: how do I get a sub-list that go with a tagged list item?
   - WARNING: This means I can't match on ParagraphBlocks without checking what the parent is if I want to have special list behavior
   - A: Split paragraph cases since I'll need to check the parent anyway
 
+Q: How do I tell if there is an empty line between a paragraph and a list?
+- It looks like white space should be tracked as triva
+- !!! I missed that you have to set `trackTrivia = true` https://geoffreymcgill.github.io/markdig/src/markdig/roundtrip/#roundtrip-parser
+  - trivia belongs to the earlier block
+- !!! This also reveals that I can use RoundTripRenderer to get the text without referring to the original document
+- A: The blocks are the same, but the new line will be accounted for by `paragraph.LinesAfter`
+
+PICKUP: for some reason round trip renderer leaves out link contents, but only in my `blockToMarkdownText'`
+- I think it's because I'm using two separate parsed trees
+
 
 IDEA: I should create sections in the joined doc based on the source of each note
 
@@ -90,8 +100,9 @@ IDEA: dynamically generate a todo list based off one or more markdown files (TOD
 
 
 ## Next Steps
-- [ ] Finish transition to project format from csx
+- [x] Finish transition to project format from csx
 - [ ] Create test cases for my expected tag scenarios
+  - [ ] still need list scenarios
 - [ ] Run actual extraction to get my book meta notes
 - [ ] Package Expecto.TestApi so I can use it as a nuget package (Maybe call it Expecto.TestEnvironment)
 - [ ] Add console interface

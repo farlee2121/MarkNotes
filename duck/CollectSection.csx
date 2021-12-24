@@ -10,7 +10,7 @@ using System.Collections.Generic;
 var source = @"## hi
 My name is nyanta and this is a section.
 
-So much in senction [link](http://google.com)
+So much in section [link](http://google.com)
 
 ### Sub heading
 
@@ -23,20 +23,34 @@ This is a paragraph to include
 ## New Section
 > Block quote
 
+paragraph
+
 - one 
 - two 
   - sub 1
   - sub 2
 - three
+
+paragraph with list
+- item 1
+- item 2
 ";
 
-var ast = Markdown.Parse(source);
+var ast = Markdown.Parse(source, trackTrivia: true);
 
 var blocks = ast.ToList();
 
 string ToOriginalMarkdown(string source, SourceSpan span){
     return source.Substring(span.Start, span.Length);
 }
+
+string ToOriginalMarkdown(MarkdownObject node){
+    var sw = new System.IO.StringWriter();
+    var renderer = new Markdig.Renderers.Roundtrip.RoundtripRenderer(sw);
+    renderer.Write(node);
+    return sw.ToString();
+}
+
 // CASE: should consider what happens when tags like BOOK: show up in a section that also gets included as a whole
 
 IEnumerable<Block> GetSectionWithContents(MarkdownDocument document, HeadingBlock heading){
