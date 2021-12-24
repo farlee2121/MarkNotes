@@ -71,8 +71,10 @@ Q: How do I tell if there is an empty line between a paragraph and a list?
 - !!! This also reveals that I can use RoundTripRenderer to get the text without referring to the original document
 - A: The blocks are the same, but the new line will be accounted for by `paragraph.LinesAfter`
 
-PICKUP: for some reason round trip renderer leaves out link contents, but only in my `blockToMarkdownText'`
-- I think it's because I'm using two separate parsed trees
+For some reason, the `RoundTripRenderer` is leaving out links. I'm just going back to the span approach for now
+
+PICKUP: figure out list behaviors
+- probably only want the branch of list items that had the tag
 
 
 IDEA: I should create sections in the joined doc based on the source of each note

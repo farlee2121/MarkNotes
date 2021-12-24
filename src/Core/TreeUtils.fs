@@ -1,4 +1,4 @@
-﻿namespace Notedown.Core
+namespace Notedown.Core
 module TreeUtils =
     open System.Collections.Generic 
 
@@ -12,9 +12,11 @@ module TreeUtils =
         let mutable aggregate = initialValue;
         let mutable unwalked = Queue()
         unwalked.Enqueue(rootNode)
+        let mutable walked = Queue()
         
         while not (Seq.isEmpty unwalked) do
             let node = unwalked.Dequeue()
+            walked.Enqueue(node)
             unwalked.EnqueueRange (getChildren node)
 
             aggregate <- aggFn aggregate node

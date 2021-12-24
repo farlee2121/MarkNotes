@@ -65,14 +65,18 @@ let reduceToTaggedBlocks (tags: string seq) (parsedMarkdown: MarkdownDocument) =
         match node with
         | :? HeadingBlock as h ->
             doesTextContainTag keyPhrases (blockToMarkdownText h)
-        | :? ParagraphBlock as p ->
+        | :? ParagraphBlock as p when (p.Parent :? MarkdownDocument) ->
             doesTextContainTag keyPhrases (blockToMarkdownText p)
+        | :? ListItemBlock as li ->
+            doesTextContainTag keyPhrases (blockToMarkdownText li)
         | _ -> false
+ 
+    //NOTE: .Descendants is already recursive and returns the full hierarchy as a flat list.
+    //      No need to walk the tree
+    parsedMarkdown.Descendants()
+    |> Seq.filter (isTaggedBlock tags)
+    |> List.ofSeq
 
-    
-    let getChildren (block:MarkdownObject) = block.Descendants()
-
-    TreeUtils.collect getChildren (isTaggedBlock tags) parsedMarkdown
 
 let private extractUnguarded (tags: string list) (markdownDocument: string) : string list=
     //TODO: ast versus string usage is inconsistent, probably a good scenario for a union + constructors

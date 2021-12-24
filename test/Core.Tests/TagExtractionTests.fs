@@ -93,7 +93,7 @@ let extractTagsTests =
 
         test "GIVEN a header that contains the expected tag WHEN I extract tagged content THEN the whole section belonging to the header is extracted" {
             let expectedTag = "BOOK:"
-            let expectedSection = $"\
+            let expectedContent = $"\
                 ## {expectedTag} Title \n\
                 This is a paragraph belonging with a [link](https://spencerfarley.com). \n\
                 \n\
@@ -101,11 +101,11 @@ let extractTagsTests =
                 - this one includes a list \n\
                 - with multiple items \
             "
-            let excludedSections = ["## Equivalent header level"; "# Higher header level"]
+            let excludedContent = ["## Equivalent header level"; "# Higher header level"]
 
-            let document = String.joinLines (List.append [expectedSection] excludedSections)
+            let document = String.joinLines (List.append [expectedContent] excludedContent)
             let extractedContent = TagExtraction.extract [expectedTag] document
-            unquote <@ [expectedSection] = extractedContent @>
+            unquote <@ [expectedContent] = extractedContent @>
         }
     ]
 
@@ -182,8 +182,28 @@ let extractTagsTests =
             Expect.equal [$"{expectedTag} upper case "] extractedContent "Only the paragraph should be extracted"
         }
     ]
-    // TODO: list item cases
-    // TODO: empty string shouldn't be a valid tag
 
+    testList "Lists" [
+        test "GIVEN a list with a tagged item WHEN I extract tagged content THEN only the tagged bullet is extracted" {
+            let expectedTag = "BOOK:"
+            let expectedContent = [
+                $"- {expectedTag} tagged item";
+            ]
+            let unexpectedContent= List.init 3 (fun i -> $"- {Guid.NewGuid().ToString()}")
+            let document = String.joinLines (List.append expectedContent unexpectedContent )
+            let extractedContent = TagExtraction.extract [expectedTag] document
+            unquote <@ expectedContent = extractedContent @>
+        }
+
+        test "GIVEN an ordered list with a tagged item WHEN I extract tagged content THEN only the tagged bullet is extracted" {
+            raise (NotImplementedException())
+        }
+
+        test "GIVEN a list with a tagged item that has children WHEN I extract tagged content THEN the tagged item is extracted with its children" {
+            raise (NotImplementedException())
+        }
+    ]
+
+    // TODO: empty string shouldn't be a valid tag
     // TODO: make sure we don't end up with multiple extraction
   ]
