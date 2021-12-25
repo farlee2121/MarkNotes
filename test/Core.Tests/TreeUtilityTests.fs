@@ -14,7 +14,7 @@ let leaf = LeafNode
 let getChildren node =
             match node with
             | InternalNode (_, children) -> children 
-            | LeafNode _ -> []
+            | LeafNode _ -> Seq.empty
 
 
 [<Tests>]
