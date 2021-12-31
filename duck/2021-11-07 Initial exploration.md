@@ -100,13 +100,38 @@ TODO: create a good name to publish the tool with
 
 IDEA: dynamically generate a todo list based off one or more markdown files (TODO tag, maybe also checklists under a todo label)
 
+I notice quotations Expr.Applications lets us apply a list of arguments to a function. They have to be expressions though
+
+## Declarative cli structure
+
+My goal is to define elements of cli (arguments, options, commands, handlers, etc) as complete declarative chunks that can be composed into a full cli.
+
+almost have it, the sticking point is handlers and multi-arity overloads
+
+attempts
+- expressions to defer evaluation
+  - taking in an untyped expression and templating it into an untyped expression almost works
+- inline
+  - it still tries to determine a type.
+  - I think it doesn't work like addition. Addition can at least determine a member constraint like supporting addition.
+- Base class or interface?
+  - Func and Action overloads have no base class
+
+Part of the problem is that the overloads take the function's types as separate generic parameters rather than the whole function signature as a single generic
+
+Other ideas?
+- require a custom binder and a single input data structure
+- Investigate an overload that takes the whole function/delegate type as a single generic parameter
+
+Q: How is the underlying binder implemented?
+
 
 ## Next Steps
 - [x] Finish transition to project format from csx
-- [ ] Create test cases for my expected tag scenarios
-  - [ ] still need list scenarios
+- [x] Create test cases for my expected tag scenarios
+  - [x] still need list scenarios
 - [ ] Run actual extraction to get my book meta notes
 - [ ] Package Expecto.TestApi so I can use it as a nuget package (Maybe call it Expecto.TestEnvironment)
-- [ ] Add console interface
+- [x] Add console interface
 - [ ] Package as dotnet tool
   - [ ] be sure to use a preview semantic version

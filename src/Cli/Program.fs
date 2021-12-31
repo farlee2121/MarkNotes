@@ -1,38 +1,44 @@
 module Program
 open System.CommandLine
-open System.CommandLine.Invocation
 open System.IO
 open System
+open Notedown.Core
+open Microsoft.FSharp.Quotations
 
-//module CommandLine =
-//    //let rootCommand description = new RootCommand(description)
-//    type RootConfig = {
-//        Description: string
-//        Options: Option list option
-//    }
+module Cli =
+    let root description (symbols: Symbol list) =
+        let root = new RootCommand(description)
+        symbols |> List.map root.Add |> ignore
+        root
 
-//    type OptionConfig ={
-//        Aliases: string list
-//        GetDefaultValue: (unit -> obj) option
-//        Description: string option
-//    }
+    let inline command<'a> name description (symbols: Symbol list) =
+        let command = new Command(name, description)
+        symbols |> List.map command.Add |> ignore
+        // command.SetHandler(handler, symbols = (symbols :> Binding.IValueDescriptor[]) )
+        command
 
-//    let option<'a> (names: string list) description =
-//        new Option<'a>(aliases = (names |> Array.ofList), description = description)
-//    //IDEA: probably better to build up a config data structure then make the tree rather than create overloads
-//    // that directly create instances with different arguments
+    let option<'a> (aliases: string list) description =
+        new Option<'a>(aliases = (aliases |> Array.ofList), description = description)
 
-//open CommandLine
+    let argument<'a> name description =
+        new Argument<'a>(name = name, description = description)
 
-type TagExtractionOptions(file, tags) =
-    member val File: FileInfo = file
-    member val Tags: string seq = tags
+type TagExtractionOptions(inputFile, tags) =
+    member val InputFile: FileInfo = inputFile
+    member val Tags: string = tags
 
-let tagExtractionHandler (filePath:FileInfo) tag =
-    let documentText = File.ReadAllText(filePath.FullName)
-    let extractedContent = Notedown.Core.TagExtraction.extract [tag] documentText
+let tagExtractionHandler (fileInput:FileInfo) tags =
+    let documentText = File.ReadAllText(fileInput.FullName)
+    let extractedContent = Notedown.Core.TagExtraction.extract [tags] documentText
     // probably write to stdout if they don't specify an output file
-    Console.WriteLine extractedContent
+    Console.WriteLine (String.joinParagraphs extractedContent)
+
+//let tagExtractionHandler (opts:TagExtractionOptions) =
+//    let documentText = File.ReadAllText(opts.InputFile.FullName)
+//    let extractedContent = Notedown.Core.TagExtraction.extract [opts.Tags] documentText
+//    // probably write to stdout if they don't specify an output file
+//    Console.WriteLine (String.joinParagraphs extractedContent)
+
 
 
 let showHelp (command:Command) () =
@@ -40,10 +46,19 @@ let showHelp (command:Command) () =
 
 [<EntryPoint>]
 let main args =
+    // let root =
+    //    Cli.root "Notedown is a set of conventions for notes in Markdown. This cli provides tools for treating such notes as data" [
+    //        (Cli.command "tag-extract" "Get content (list items, paragraphs, sections, etc) with the given tag" [
+    //            Cli.argument<FileInfo> "input-file" "The file to extact content from"
+    //            Cli.option<FileInfo> ["--tags"; "-t"] "One or more tags marking content to extract (e.g. 'BOOK:', 'TODO:')"
+    //        ]).SetHandler (tagExtractionHandler, symbols = [||])
+    //    ]
+
+
     let root = new RootCommand()
     let extractCommand = new Command("tag-extract", "such description")
     //TODO: I really want this to be a directory or pattern
-    let fileArg = new Argument<FileInfo>(name = "input file", description = "The input file for extraction")
+    let fileArg = new Argument<FileInfo>(name = "input-file", description = "The input file for extraction")
     let tagArg = new Option<string>(aliases = [|"--tags"; "-t"|])
     extractCommand.AddArgument(fileArg)
     extractCommand.AddOption(tagArg)
@@ -51,6 +66,3 @@ let main args =
     root.AddCommand(extractCommand);
     root.SetHandler(showHelp root)
     root.Invoke args
-
-    // If I make a builder model, then I'll have to figure out how to match up args/opts with a handler since I won't have the references, maybe look them up by name?
-    

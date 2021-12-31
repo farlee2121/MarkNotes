@@ -1,0 +1,78 @@
+#!markdown
+
+## Motivation
+
+Handling multi-arity overloads is a repeated pain for interacting between C# and F#, especially when it comes to delegates like Func<> and Action<>.
+
+In this case, I need to specify a handler for the command-line input parser. I can do it directly, but it requires named references to input declarations.
+This makes for messy cli declarations. I want to be able to declare my cli structure in a clean nested, expression-based, format.
+
+#!fsharp
+
+//TODO: see if I can use quotations to defer generic inference
+open Microsoft.FSharp.Quotations
+
+type HasOverloads() = 
+    static member Handler<'a>(handler:Action<'a>, [<ParamArray>] args : obj[]) = 
+        handler.Invoke((args[0]) :?> 'a)
+    
+    static member Handler<'a1, 'a2>(handler:Action<'a,'b>, [<ParamArray>] args : obj[]) =
+        handler.Invoke((args[0]) :?> 'a1, (args[1]) :?> 'a2)
+
+
+let handler (n: int) = (printfn "nya: %i" (n + 1)) 
+let handler2 (n: int) (s: String) = (printfn "nya: %i %s" (n + 10) s) 
+HasOverloads.Handler(handler, 3)
+HasOverloads.Handler(handler2, 3, "hi")
+
+let toFunc<'a, 'b> f =
+    System.Func<'a, 'b> f
+let toFunc2<'a, 'b, 'c> f = // 2 for 2 parameters
+    System.Func<'a, 'b, 'c> f
+
+let toAction<'a> f =
+    System.Action<'a> f
+let toAction2<'a, 'b> f = 
+    System.Action<'a, 'b> f
+
+let delToAction<'a> (delegate': Delegate) = 
+    System.Action<'a> delegate'
+
+let inline wrapper (handler:Expr) (args: obj array) = 
+    
+    // HasOverloads.Handler(handler, args)
+    // handler.GetType().
+    // let expr = <@@ HasOverloads.Handler(%%handler, args) @@>
+    // // Expr.
+
+    // This untyped expression approach almost works, but it is failing some 
+    /// a typed quotation won't work because it resolves types like inference does, so it runs into the same problem that it can't be untyped per branch
+    // the functions don't appear to have a shared base class, though delegate could work
+    let expr = 
+        match Array.length args with
+        | 1 -> <@@ HasOverloads.Handler((%%handler |> toAction), args) @@>
+        | 2 -> <@@ HasOverloads.Handler((%%handler |> toAction2), args) @@>
+        | _ -> (raise (ArgumentException()))
+    
+    FSharp.Linq.RuntimeHelpers.LeafExpressionConverter.EvaluateQuotation expr
+
+let inline wrapper2 (handler:Delegate) (args: obj array) = 
+    
+    // HasOverloads.Handler(handler, args)
+    // handler.GetType().
+    // let expr = <@@ HasOverloads.Handler(%%handler, args) @@>
+    // // Expr.
+
+    // This untyped expression approach almost works, but it is failing some 
+    /// a typed quotation won't work because it resolves types like inference does, so it runs into the same problem that it can't be untyped per branch
+    let expr = 
+        match Array.length args with
+        | 1 -> HasOverloads.Handler((handler |> delToAction), args) 
+        | 2 -> HasOverloads.Handler((handler |> toAction2), args) 
+        | _ -> (raise (ArgumentException()))
+    
+    FSharp.Linq.RuntimeHelpers.LeafExpressionConverter.EvaluateQuotation expr
+
+
+(handler2 |> toAction2).Invoke(3, "hi")
+wrapper <@@ handler2 @@> [|3; "hi"|]

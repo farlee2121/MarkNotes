@@ -12,14 +12,6 @@ let permute list =
 
   List.fold (fun accum x -> List.collect (inserts x) accum) [[]] list
 
-module String = 
-    let join (separator: string) (strings:string seq) =
-        String.Join(separator, strings)
-
-    let joinLines (strings: string seq) = join "\n" strings
-    let joinParagraphs (strings: string seq) = join "\n\n" strings
-    let split (separator: string) (str: string) = 
-        str.Split(separator)
 
 let extractTagsAsOriginalText tags markdown = 
     TagExtraction.extract tags markdown
