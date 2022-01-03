@@ -4,6 +4,9 @@ open System.IO
 open System
 open Notedown.Core
 open Microsoft.FSharp.Quotations
+open System.CommandLine.Binding
+open System.CommandLine.Invocation
+open System.CommandLine.NamingConventionBinder
 
 module Cli =
     let root description (symbols: Symbol list) =
@@ -11,10 +14,11 @@ module Cli =
         symbols |> List.map root.Add |> ignore
         root
 
-    let inline command<'a> name description (symbols: Symbol list) =
+    let command<'a> name description (symbols: Symbol list) (handler: ICommandHandler) =
         let command = new Command(name, description)
         symbols |> List.map command.Add |> ignore
-        // command.SetHandler(handler, symbols = (symbols :> Binding.IValueDescriptor[]) )
+        
+        command.Handler <- handler
         command
 
     let option<'a> (aliases: string list) description =
@@ -27,17 +31,12 @@ type TagExtractionOptions(inputFile, tags) =
     member val InputFile: FileInfo = inputFile
     member val Tags: string = tags
 
-let tagExtractionHandler (fileInput:FileInfo) tags =
-    let documentText = File.ReadAllText(fileInput.FullName)
-    let extractedContent = Notedown.Core.TagExtraction.extract [tags] documentText
+let tagExtractionHandler (inputFile:FileInfo) (tags:string) =
+    let documentText = File.ReadAllText(inputFile.FullName)
+    let extractedContent = TagExtraction.extract [tags] documentText
     // probably write to stdout if they don't specify an output file
     Console.WriteLine (String.joinParagraphs extractedContent)
 
-//let tagExtractionHandler (opts:TagExtractionOptions) =
-//    let documentText = File.ReadAllText(opts.InputFile.FullName)
-//    let extractedContent = Notedown.Core.TagExtraction.extract [opts.Tags] documentText
-//    // probably write to stdout if they don't specify an output file
-//    Console.WriteLine (String.joinParagraphs extractedContent)
 
 
 
@@ -46,23 +45,13 @@ let showHelp (command:Command) () =
 
 [<EntryPoint>]
 let main args =
-    // let root =
-    //    Cli.root "Notedown is a set of conventions for notes in Markdown. This cli provides tools for treating such notes as data" [
-    //        (Cli.command "tag-extract" "Get content (list items, paragraphs, sections, etc) with the given tag" [
-    //            Cli.argument<FileInfo> "input-file" "The file to extact content from"
-    //            Cli.option<FileInfo> ["--tags"; "-t"] "One or more tags marking content to extract (e.g. 'BOOK:', 'TODO:')"
-    //        ]).SetHandler (tagExtractionHandler, symbols = [||])
-    //    ]
+    let root =
+       Cli.root "Notedown is a set of conventions for notes in Markdown. This cli provides tools for treating such notes as data" [
+           Cli.command "tag-extract" "Get content (list items, paragraphs, sections, etc) with the given tag" [
+               Cli.argument<FileInfo> "input-file" "The file to extact content from"
+               Cli.option<string> ["--tags"; "-t"] "One or more tags marking content to extract (e.g. 'BOOK:', 'TODO:')"
+           ] (CommandHandler.Create((fun (inputFile:FileInfo) (tags:String)-> tagExtractionHandler inputFile tags))) // for some reason doesn't work against the F# function
+       ] 
 
-
-    let root = new RootCommand()
-    let extractCommand = new Command("tag-extract", "such description")
-    //TODO: I really want this to be a directory or pattern
-    let fileArg = new Argument<FileInfo>(name = "input-file", description = "The input file for extraction")
-    let tagArg = new Option<string>(aliases = [|"--tags"; "-t"|])
-    extractCommand.AddArgument(fileArg)
-    extractCommand.AddOption(tagArg)
-    extractCommand.SetHandler(tagExtractionHandler, fileArg, tagArg)
-    root.AddCommand(extractCommand);
     root.SetHandler(showHelp root)
     root.Invoke args
