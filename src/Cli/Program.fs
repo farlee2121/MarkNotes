@@ -3,10 +3,9 @@ open System.CommandLine
 open System.IO
 open System
 open Notedown.Core
-open Microsoft.FSharp.Quotations
-open System.CommandLine.Binding
 open System.CommandLine.Invocation
 open System.CommandLine.NamingConventionBinder
+open Microsoft.Extensions.FileSystemGlobbing
 
 module Cli =
     let root description (symbols: Symbol list) =
@@ -31,11 +30,27 @@ type TagExtractionOptions(inputFile, tags) =
     member val InputFile: FileInfo = inputFile
     member val Tags: string = tags
 
-let tagExtractionHandler (inputFile:FileInfo) (tags:string) =
-    let documentText = File.ReadAllText(inputFile.FullName)
-    let extractedContent = TagExtraction.extract [tags] documentText
-    // probably write to stdout if they don't specify an output file
-    Console.WriteLine (String.joinParagraphs extractedContent)
+let tagExtractionHandler (inputFilePattern:string) (tags:string) =
+    let fileMatcher = new Matcher()
+    let inputFilePaths =
+        if (Path.IsPathFullyQualified(inputFilePattern))
+        then seq {inputFilePattern}
+        else fileMatcher.AddInclude(inputFilePattern)
+                            .GetResultsInFullPath(Directory.GetCurrentDirectory())
+
+    let extractSingleDocument inputFilePath =
+        let documentText = File.ReadAllText(inputFilePath)
+        let extractedContent = TagExtraction.extract [tags] documentText
+        extractedContent
+
+    //IDEA: it'd probably be a good idea to include the source file name at the start of each
+    let extractedContents = inputFilePaths |> Seq.map (extractSingleDocument >> String.joinParagraphs)
+
+    let documentOutputSeparator = "\n---\n"
+    let joinedOutput = String.join documentOutputSeparator extractedContents
+
+    // Write to stdout if they don't specify an output file
+    Console.WriteLine (joinedOutput)
 
 
 
@@ -48,9 +63,9 @@ let main args =
     let root =
        Cli.root "Notedown is a set of conventions for notes in Markdown. This cli provides tools for treating such notes as data" [
            Cli.command "tag-extract" "Get content (list items, paragraphs, sections, etc) with the given tag" [
-               Cli.argument<FileInfo> "input-file" "The file to extact content from"
+               Cli.argument<string> "input-file-pattern" "File(s) to extract tagged data from. A file path or glob pattern."
                Cli.option<string> ["--tags"; "-t"] "One or more tags marking content to extract (e.g. 'BOOK:', 'TODO:')"
-           ] (CommandHandler.Create((fun (inputFile:FileInfo) (tags:String)-> tagExtractionHandler inputFile tags))) // for some reason doesn't work against the F# function
+           ] (CommandHandler.Create((fun (inputFilePattern:string) (tags:String)-> tagExtractionHandler inputFilePattern tags))) // for some reason doesn't work against the F# function
        ] 
 
     root.SetHandler(showHelp root)
