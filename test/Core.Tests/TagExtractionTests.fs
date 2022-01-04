@@ -211,6 +211,17 @@ let extractTagsTests =
             let extractedContent = TagExtraction.extract [expectedTag] document
             unquote <@ expectedContent = extractedContent @>
         }
+
+        test "GIVEN an untagged list with a tagged sub-item WHEN I extract tagged content THEN only the sub-item is extracted" {
+            let expectedTag = "BOOK:"
+            let expectedContent = [
+                $"\t - {expectedTag} sub item \n";
+            ]
+            let unexpectedContent= List.init 3 (fun i -> $"- {Guid.NewGuid().ToString()}")
+            let document = String.joinLines (List.append unexpectedContent expectedContent)
+            let extractedContent = TagExtraction.extract [expectedTag] document
+            unquote <@ (expectedContent |> List.map String.trim) = (extractedContent |> List.map String.trim) @>
+        }
     ]
 
     // TODO: empty string shouldn't be a valid tag

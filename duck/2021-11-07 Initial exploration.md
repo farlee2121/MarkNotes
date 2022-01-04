@@ -190,11 +190,13 @@ command "name" handler [
 - [x] Finish transition to project format from csx
 - [x] Create test cases for my expected tag scenarios
   - [x] still need list scenarios
-- [ ] Support directory or glob pattern
-- [ ] Support output file
+- [x] Support directory or glob pattern
+- [x] Support output file
 - [ ] Run actual extraction to get my book meta notes
-- [ ] Package Expecto.TestApi so I can use it as a nuget package (Maybe call it Expecto.TestEnvironment)
 - [x] Add console interface
-- [ ] Package as dotnet tool
+- [ ] Ensure only lowest tagged list block is extracted
+- [ ] publish
   - [ ] be sure to use a preview semantic version
+  - [ ] Package as dotnet tool
+  - [ ] downloadable self-contained exe
 - [ ] Add Logging with different verbosity levels

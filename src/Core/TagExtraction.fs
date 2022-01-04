@@ -68,7 +68,7 @@ module TagExtraction =
             | :? ParagraphBlock as p when (p.Parent :? MarkdownDocument) ->
                 doesTextContainTag keyPhrases (blockToMarkdownText p)
             | :? ListItemBlock as li ->
-                doesTextContainTag keyPhrases (blockToMarkdownText li)
+                doesTextContainTag keyPhrases (blockToMarkdownText (List.headOr (List.ofSeq li) li))
             | _ -> false
  
         //NOTE: .Descendants is already recursive and returns the full hierarchy as a flat list.
