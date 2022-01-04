@@ -30,7 +30,7 @@ type TagExtractionOptions(inputFile, tags) =
     member val InputFile: FileInfo = inputFile
     member val Tags: string = tags
 
-let tagExtractionHandler (inputFilePattern:string) (tags:string) =
+let tagExtractionHandler (inputFilePattern:string) (tags:string) (outputFile:FileInfo)=
     let fileMatcher = new Matcher()
     let inputFilePaths =
         if (Path.IsPathFullyQualified(inputFilePattern))
@@ -49,8 +49,10 @@ let tagExtractionHandler (inputFilePattern:string) (tags:string) =
     let documentOutputSeparator = "\n---\n"
     let joinedOutput = String.join documentOutputSeparator extractedContents
 
+    match outputFile with
     // Write to stdout if they don't specify an output file
-    Console.WriteLine (joinedOutput)
+    | null -> Console.WriteLine (joinedOutput)
+    | f -> File.WriteAllText(f.FullName, joinedOutput) 
 
 
 
@@ -65,7 +67,9 @@ let main args =
            Cli.command "tag-extract" "Get content (list items, paragraphs, sections, etc) with the given tag" [
                Cli.argument<string> "input-file-pattern" "File(s) to extract tagged data from. A file path or glob pattern."
                Cli.option<string> ["--tags"; "-t"] "One or more tags marking content to extract (e.g. 'BOOK:', 'TODO:')"
-           ] (CommandHandler.Create((fun (inputFilePattern:string) (tags:String)-> tagExtractionHandler inputFilePattern tags))) // for some reason doesn't work against the F# function
+               Cli.option<FileInfo> ["--output"; "-o"] "File to write extracted content to. Will overwrite if it already exists."
+           ] (CommandHandler.Create((fun (inputFilePattern:string) (tags:String) (output:FileInfo) ->
+                tagExtractionHandler inputFilePattern tags output))) // for some reason doesn't work against the F# function
        ] 
 
     root.SetHandler(showHelp root)
