@@ -192,11 +192,13 @@ command "name" handler [
   - [x] still need list scenarios
 - [x] Support directory or glob pattern
 - [x] Support output file
-- [ ] Run actual extraction to get my book meta notes
 - [x] Add console interface
-- [ ] Ensure only lowest tagged list block is extracted
+- [x] Ensure only lowest tagged list block is extracted
+- [ ] Run actual extraction to get my book meta notes
 - [ ] publish
   - [ ] be sure to use a preview semantic version
   - [ ] Package as dotnet tool
   - [ ] downloadable self-contained exe
 - [ ] Add Logging with different verbosity levels
+- [ ] consider the library api (e.g. should I offer the same interface as the cli w/ globbing and such?)
+- [ ] add rule descriptions to the CLI help?

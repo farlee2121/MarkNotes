@@ -64,7 +64,7 @@ let showHelp (command:Command) () =
 let main args =
     let root =
        Cli.root "Notedown is a set of conventions for notes in Markdown. This cli provides tools for treating such notes as data" [
-           Cli.command "tag-extract" "Get content (list items, paragraphs, sections, etc) with the given tag" [
+           Cli.command "extract-tags" "Get content (list items, paragraphs, sections, etc) with the given tag" [
                Cli.argument<string> "input-file-pattern" "File(s) to extract tagged data from. A file path or glob pattern."
                Cli.option<string> ["--tags"; "-t"] "One or more tags marking content to extract (e.g. 'BOOK:', 'TODO:')"
                Cli.option<FileInfo> ["--output"; "-o"] "File to write extracted content to. Will overwrite if it already exists."
