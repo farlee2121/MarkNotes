@@ -89,6 +89,6 @@ let m = Matcher()
 m.AddInclude("C:/Users/farle/OneDrive/Documents/Reading Notes/2021-09-13 Small Teaching.md")
   .AddInclude("2021-09-13 Small Teaching.md")
   .AddInclude("C:/Users/farle/OneDrive/Documents/Reading Notes/*")
-  .AddInclude("2019-*.md")
+  .AddInclude("2018-*")
 
 m.GetResultsInFullPath("C:/Users/farle/OneDrive/Documents/Reading Notes/")

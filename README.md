@@ -3,10 +3,10 @@
 Notedown is a [set of conventions](https://spencerfarley.com/2021/03/05/reference-ready-notes/) for notes in markdown and tools that operate on the conventions.
 These conventions aim to
 - be intuitive as plain text
-- Not interrupt flow while taking notes
-- Make notes easy to skim for reference
+- not interrupt flow while taking notes
+- make notes easy to skim for reference
 - easily back into existing notes
-- [Treat our notes as a data source](https://spencerfarley.com/2021/03/05/reference-ready-notes/)
+- [treat notes as a data source](https://spencerfarley.com/2021/03/05/reference-ready-notes/)
 
 This repository contains tools for programmatically leveraging Notedown conventions.
 

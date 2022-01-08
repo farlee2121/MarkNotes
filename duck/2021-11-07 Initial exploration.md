@@ -184,7 +184,34 @@ command "name" handler [
 
 ```
 
+## Packaging / Release
 
+I want to publish
+- a single-file exe to github releases
+- a dotnet cli tool
+- create a repo tag
+- Can skip a library package for now.
+
+Publishing a dotnet tool is just like a nuget package, but with some extra project config
+- https://docs.microsoft.com/en-us/dotnet/core/tools/global-tools-how-to-create
+
+
+Q: how do i publish to github releases?
+- here's one option https://github.com/marketplace/actions/github-releases
+- here's first-party cli and UI instructions https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository
+- Q: does github actions come with github cli?
+  - A: yes, https://github.blog/2021-03-11-scripting-with-github-cli/#using-gh-in-github-actions
+
+Q: how do I create a single-file exe?
+- https://docs.microsoft.com/en-us/dotnet/core/deploying/single-file
+- single-file apps have to be platform targeted
+  - my app is simple enough I can probably just package win-x64,linux-x64, and osx-x64
+
+Q: How do I create github secrets?
+- https://docs.github.com/en/actions/security-guides/encrypted-secrets
+- short: in settings > secrets
+
+Q: what happens if I try to re-publish a version (i.e. forget to update version number)?
 
 ## Next Steps
 - [x] Finish transition to project format from csx
@@ -194,11 +221,15 @@ command "name" handler [
 - [x] Support output file
 - [x] Add console interface
 - [x] Ensure only lowest tagged list block is extracted
-- [ ] Run actual extraction to get my book meta notes
+- [x] Run actual extraction to get my book meta notes
+- [ ] Add optional source file reference
 - [ ] publish
   - [ ] be sure to use a preview semantic version
   - [ ] Package as dotnet tool
   - [ ] downloadable self-contained exe
+  - [ ] add install instructions to readme
+- [ ] Add badges
 - [ ] Add Logging with different verbosity levels
 - [ ] consider the library api (e.g. should I offer the same interface as the cli w/ globbing and such?)
 - [ ] add rule descriptions to the CLI help?
+- [ ] Use PropertyMapBinder for the handler

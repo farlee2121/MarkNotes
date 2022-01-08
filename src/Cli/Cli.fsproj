@@ -2,7 +2,9 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <AssemblyName>notedown</AssemblyName>
     <TargetFramework>net6.0</TargetFramework>
+
   </PropertyGroup>
 
   <ItemGroup>

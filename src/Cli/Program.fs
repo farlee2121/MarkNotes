@@ -22,6 +22,10 @@ module Cli =
 
     let option<'a> (aliases: string list) description =
         new Option<'a>(aliases = (aliases |> Array.ofList), description = description)
+    
+    let withArity<'a> (arity: ArgumentArity) (opt: Option<'a>) =
+        opt.Arity <- arity
+        opt
 
     let argument<'a> name description =
         new Argument<'a>(name = name, description = description)
@@ -30,7 +34,7 @@ type TagExtractionOptions(inputFile, tags) =
     member val InputFile: FileInfo = inputFile
     member val Tags: string = tags
 
-let tagExtractionHandler (inputFilePattern:string) (tags:string) (outputFile:FileInfo)=
+let tagExtractionHandler (inputFilePattern:string) (tags:string list) (outputFile:FileInfo)=
     let fileMatcher = new Matcher()
     let inputFilePaths =
         if (Path.IsPathFullyQualified(inputFilePattern))
@@ -40,13 +44,17 @@ let tagExtractionHandler (inputFilePattern:string) (tags:string) (outputFile:Fil
 
     let extractSingleDocument inputFilePath =
         let documentText = File.ReadAllText(inputFilePath)
-        let extractedContent = TagExtraction.extract [tags] documentText
+        let extractedContent = TagExtraction.extract tags documentText
         extractedContent
 
     //IDEA: it'd probably be a good idea to include the source file name at the start of each
-    let extractedContents = inputFilePaths |> Seq.map (extractSingleDocument >> String.joinParagraphs)
+    let extractedContents = 
+        inputFilePaths 
+        |> Seq.map extractSingleDocument
+        |> Seq.filter (Seq.isEmpty >> not)
+        |> Seq.map (String.joinParagraphs)
 
-    let documentOutputSeparator = "\n---\n"
+    let documentOutputSeparator = "\n\n---\n\n"
     let joinedOutput = String.join documentOutputSeparator extractedContents
 
     match outputFile with
@@ -66,10 +74,11 @@ let main args =
        Cli.root "Notedown is a set of conventions for notes in Markdown. This cli provides tools for treating such notes as data" [
            Cli.command "extract-tags" "Get content (list items, paragraphs, sections, etc) with the given tag" [
                Cli.argument<string> "input-file-pattern" "File(s) to extract tagged data from. A file path or glob pattern."
-               Cli.option<string> ["--tags"; "-t"] "One or more tags marking content to extract (e.g. 'BOOK:', 'TODO:')"
+               Cli.option<string seq> ["--tags"; "-t"] "One or more tags marking content to extract (e.g. 'BOOK:', 'TODO:')"
+                |> Cli.withArity ArgumentArity.OneOrMore
                Cli.option<FileInfo> ["--output"; "-o"] "File to write extracted content to. Will overwrite if it already exists."
-           ] (CommandHandler.Create((fun (inputFilePattern:string) (tags:String) (output:FileInfo) ->
-                tagExtractionHandler inputFilePattern tags output))) // for some reason doesn't work against the F# function
+           ] (CommandHandler.Create((fun (inputFilePattern:string) (tags:string seq) (output:FileInfo) ->
+                tagExtractionHandler inputFilePattern (tags |> List.ofSeq) output))) // for some reason doesn't work against the F# function
        ] 
 
     root.SetHandler(showHelp root)
