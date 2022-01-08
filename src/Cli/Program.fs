@@ -50,12 +50,14 @@ let tagExtractionHandler (inputFilePattern:string) (tags:string list) (outputFil
     //IDEA: it'd probably be a good idea to include the source file name at the start of each
     let extractedContents = 
         inputFilePaths 
-        |> Seq.map extractSingleDocument
-        |> Seq.filter (Seq.isEmpty >> not)
-        |> Seq.map (String.joinParagraphs)
+        |> Seq.map (fun path -> (path, extractSingleDocument path))
+        |> Seq.filter (fun (_, extracted)-> not (List.isEmpty extracted))
+
+    let formatSingleFileExtactions (path:string, extracted) =  
+        $"```yml\n source: \"{path}\"\n``` \n\n{String.joinParagraphs extracted}"
 
     let documentOutputSeparator = "\n\n---\n\n"
-    let joinedOutput = String.join documentOutputSeparator extractedContents
+    let joinedOutput = String.join documentOutputSeparator (extractedContents |> Seq.map formatSingleFileExtactions)
 
     match outputFile with
     // Write to stdout if they don't specify an output file
