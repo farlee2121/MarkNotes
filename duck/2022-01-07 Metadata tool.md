@@ -34,3 +34,7 @@ NOTE: the sections will all have to share a metadata model
 
 Q: Should I lean on the deserializer for property mapping?
 - probably works for now, but I should give it a look
+
+Q: is there any case for metadata on the commandline?
+- not really, it's more of a library tool for building other experiences
+- maybe extracting sections based on certain meta, but I haven't wanted that yet
