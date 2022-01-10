@@ -148,16 +148,18 @@ SOURCE: a few good articles on balancing CI/CD with semantic versioning.
 - [x] Add console interface
 - [x] Ensure only lowest tagged list block is extracted
 - [x] Run actual extraction to get my book meta notes
-- [ ] Add optional source file reference
-- [ ] publish
-  - [ ] be sure to use a preview semantic version
-  - [ ] Package as dotnet tool
-  - [ ] downloadable self-contained exe
-  - [ ] add install instructions to readme
+- [x] Add optional source file reference
+- [x] Use PropertyMapBinder for the handler
+- [x] let the user set the source file separator
+- [x] let the user set the source file reference format (I can define a few standard variables like `{source_name}` and `{source_path}`)
+- [x] publish
+  - [x] be sure to use a preview semantic version
+  - [x] downloadable self-contained exe
+  - [x] add install instructions to readme
+- [ ] Consider changing souremap format to output format (and add a variable for {extractions})
 - [ ] Add badges
 - [ ] Add Logging with different verbosity levels
 - [ ] consider the library api (e.g. should I offer the same interface as the cli w/ globbing and such?)
 - [ ] add rule descriptions to the CLI help?
-- [ ] Use PropertyMapBinder for the handler
-- [ ] let the user set the source file separator
-- [ ] let the user set the source file reference format (I can define a few standard variables like `{source_name}` and `{source_path}`)
+- [ ] Package as dotnet tool
+- [ ] Package core as library

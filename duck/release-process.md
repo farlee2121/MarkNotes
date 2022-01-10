@@ -14,9 +14,9 @@ git push --tags
 ```
 2. Package exes (be sure to set the version)
 ```powershell
-dotnet publish -r win-x64   -p:PublishSingleFile=true --self-contained true /p:Version="0.1.0-alpha"
-dotnet publish -r linux-x64 -p:PublishSingleFile=true --self-contained true /p:Version="0.1.0-alpha"
-dotnet publish -r osx-x64   -p:PublishSingleFile=true --self-contained true /p:Version="0.1.0-alpha"
+dotnet publish -r win-x64   -p:PublishSingleFile=true --self-contained true -c Release /p:Version="0.1.0-alpha"
+dotnet publish -r linux-x64 -p:PublishSingleFile=true --self-contained true -c Release /p:Version="0.1.0-alpha"
+dotnet publish -r osx-x64   -p:PublishSingleFile=true --self-contained true -c Release /p:Version="0.1.0-alpha"
 ```
 2. Copy them to a new release at https://github.com/farlee2121/Notedown/releases/new
    1. set the title and release notes
@@ -42,4 +42,9 @@ I can also publish from the cli, though a manual upload gives me an opportunity 
 dotnet nuget push <path-to.nupkg> -k <api-key>
 ```
 
-All of this can pretty easily translate to an automated process, either as a local script or github action
+All of this can pretty easily translate to an automated process, either as a local script or github action.
+The one change would be creating the github release via github cli
+```powershell
+# note the first argument is the repository tag
+gh release create "0.1.0-alpha" --title "v0.1.0-alpha" --notes "such notes" --prerelease
+```
