@@ -7,62 +7,6 @@ open System.CommandLine.Invocation
 open System.CommandLine.PropertyMapBinder
 open Microsoft.Extensions.FileSystemGlobbing
 
-module Cli =
-    let root description (symbols: Symbol list) =
-        let root = new RootCommand(description)
-        symbols |> List.map root.Add |> ignore
-        root
-
-    let command<'a> name description (symbols: Symbol list) (handler: ICommandHandler) =
-        let command = new Command(name, description)
-        symbols |> List.map command.Add |> ignore
-        
-        command.Handler <- handler
-        command
-
-    let option<'a> (aliases: string list) description =
-        new Option<'a>(aliases = (aliases |> Array.ofList), description = description)
-    
-    let withArity<'a> (arity: ArgumentArity) (opt: Option<'a>) =
-        opt.Arity <- arity
-        opt
-
-    let argument<'a> name description =
-        new Argument<'a>(name = name, description = description)
-
-    module CommandHandler = 
-        let fromPropertyMap (binders: IPropertyBinder<'a> list) (handler: 'a -> 'b) : ICommandHandler =
-            CommandHandler.FromPropertyMap (handler, (new BinderPipeline<'a>(binders)))
-
-    module PropertyMap =
-        open Microsoft.FSharp.Quotations
-        open Microsoft.FSharp.Linq.RuntimeHelpers.LeafExpressionConverter
-        open System.Linq.Expressions
- 
-        let rec private translateExpr (linq:Expression) = 
-            match linq with
-            | :? MethodCallExpression as mc ->
-                let le = mc.Arguments.[0] :?> LambdaExpression
-                let args, body = translateExpr le.Body
-                le.Parameters.[0] :: args, body
-            | _ -> [], linq
-
-        /// Converts a Lambda quotation into a Linq Lamba Expression with 1 parameter
-        let private toLinq (exp : Expr<'a -> 'b>) : System.Linq.Expressions.Expression<Func<'a,'b>> =
-            let args, body = translateExpr (QuotationToLambdaExpression exp)
-            Expression.Lambda<Func<'a, 'b>>(body, (args |> Seq.ofList))
-            
-
-        let fromName name (selector:Expr<'a -> 'b>) =
-            let test = System.Linq.Expressions.Expression.Lambda<Func<'a,'b>>(toLinq selector)
-            PropertyMap.FromName (name = name, selectorLambda = (toLinq selector))
-            
-        // what do I want? 
-        //- I want to stop fighting Func/expression 
-        //- I want to normalize into the F# paradigm (option, F# lists) 
-        // type private FSharpClosureBinder<'a>(binder: 'a ->'a) =
-        //     inherit IPropertyBinder<'a>
-        //     member Bind<'a> = binder
 
 [<CLIMutable>]
 type TagExtractionOptions = {
@@ -118,12 +62,9 @@ let main args =
                 |> Cli.withArity ArgumentArity.OneOrMore
                Cli.option<FileInfo> ["--output"; "-o"] "File to write extracted content to. Will overwrite if it already exists."
            ] (Cli.CommandHandler.fromPropertyMap [
-               (PropertyMap.FromName ("--tags", setter = (fun model input -> { model with Tags = (List.ofSeq input)})))
-               (Cli.PropertyMap.fromName "input-file-pattern" <@ fun (model) -> model.InputFilePattern @>)
-               (PropertyMap.FromName ("-o", setter = (fun model (input:FileInfo) -> 
-                                                                    match input with
-                                                                    | null -> {model with OutputFile = None}
-                                                                    | _ -> {model with OutputFile = Some input})))
+               (Cli.PropertyMap.nameAndSetter "--tags" (fun model input -> { model with Tags = (List.ofSeq input)}))
+               (Cli.PropertyMap.nameAndSetter "input-file-pattern" (fun model input -> { model with InputFilePattern = input }))
+               (Cli.PropertyMap.nameAndSetter "-o" (fun model input ->  {model with OutputFile = Option.ofObj input }))
             ] tagExtractionHandler)
        ] 
 
