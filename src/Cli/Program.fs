@@ -29,7 +29,6 @@ let tagExtractionHandler (extractionOptions:TagExtractionOptions) =
         let extractedContent = TagExtraction.extract extractionOptions.Tags documentText
         extractedContent
 
-    //IDEA: it'd probably be a good idea to include the source file name at the start of each
     let extractedContents = 
         inputFilePaths 
         |> Seq.map (fun path -> (path, extractSingleDocument path))
@@ -47,7 +46,6 @@ let tagExtractionHandler (extractionOptions:TagExtractionOptions) =
     let joinedOutput = String.join documentOutputSeparator (extractedContents |> Seq.map formatSingleFileExtactions)
 
     match extractionOptions.OutputFile with
-    // Write to stdout if they don't specify an output file
     | None -> Console.WriteLine (joinedOutput)
     | Some f -> File.WriteAllText(f.FullName, joinedOutput) 
 
