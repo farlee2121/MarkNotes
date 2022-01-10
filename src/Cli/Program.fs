@@ -38,7 +38,12 @@ let tagExtractionHandler (extractionOptions:TagExtractionOptions) =
     let formatSingleFileExtactions (path:string, extracted) =  
         $"```yml\n source: \"{path}\"\n``` \n\n{String.joinParagraphs extracted}"
 
-    let documentOutputSeparator = "\n\n---\n\n"
+    let enableSpecialStringChars (str:string) = 
+        let specialPairs = [("\\n","\n"); ("\\t", "\\t"); ("\\s", "\s")]
+        let replace (s:string) (from:string, to':string) = s.Replace(from, to')
+        specialPairs |> List.fold (replace) str
+
+    let documentOutputSeparator = (Option.defaultValue "\n\n---\n\n" extractionOptions.DocumentOutputSeparator) |> enableSpecialStringChars
     let joinedOutput = String.join documentOutputSeparator (extractedContents |> Seq.map formatSingleFileExtactions)
 
     match extractionOptions.OutputFile with
@@ -54,6 +59,7 @@ let showHelp (command:Command) () =
 
 [<EntryPoint>]
 let main args =
+    printfn "%A" args
     let root =
        Cli.root "Notedown is a set of conventions for notes in Markdown. This cli provides tools for treating such notes as data" [
            Cli.command "extract-tags" "Get content (list items, paragraphs, sections, etc) with the given tag" [
@@ -61,10 +67,12 @@ let main args =
                Cli.option<string seq> ["--tags"; "-t"] "One or more tags marking content to extract (e.g. 'BOOK:', 'TODO:')"
                 |> Cli.withArity ArgumentArity.OneOrMore
                Cli.option<FileInfo> ["--output"; "-o"] "File to write extracted content to. Will overwrite if it already exists."
+               Cli.option<string> ["--output-separator"] "Used to delineate extracted output from each input file. Default is \\n\\n---\\n\\n"
            ] (Cli.CommandHandler.fromPropertyMap [
-               (Cli.PropertyMap.nameAndSetter "--tags" (fun model input -> { model with Tags = (List.ofSeq input)}))
+               (Cli.PropertyMap.nameAndSetter "--tags" (fun model input -> { model with Tags = List.ofSeq input}))
                (Cli.PropertyMap.nameAndSetter "input-file-pattern" (fun model input -> { model with InputFilePattern = input }))
                (Cli.PropertyMap.nameAndSetter "-o" (fun model input ->  {model with OutputFile = Option.ofObj input }))
+               (Cli.PropertyMap.nameAndSetter "--output-separator" (fun model input ->  {model with DocumentOutputSeparator = Option.ofObj input }))
             ] tagExtractionHandler)
        ] 
 
