@@ -38,3 +38,10 @@ Q: Should I lean on the deserializer for property mapping?
 Q: is there any case for metadata on the commandline?
 - not really, it's more of a library tool for building other experiences
 - maybe extracting sections based on certain meta, but I haven't wanted that yet
+
+
+PICKUP:
+- Publish preview of PropertyMapBinder 
+- use it to simplify additional options here (sourcemap format, divider format)
+  - Q: do I want sourcemaps by default? I think i'll normally want them, and removing them would be as easy as `--source-map-format ""`
+- publish the tag extractor cli

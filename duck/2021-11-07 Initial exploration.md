@@ -132,6 +132,12 @@ Q: How do I create github secrets?
 - short: in settings > secrets
 
 Q: what happens if I try to re-publish a version (i.e. forget to update version number)?
+- nuget never allows you to change the contents of a version
+
+SOURCE: a few good articles on balancing CI/CD with semantic versioning. 
+- short: use pre-release tags
+- https://devblogs.microsoft.com/devops/versioning-nuget-packages-cd-1/
+- https://docs.microsoft.com/en-us/nuget/concepts/package-versioning
 
 ## Next Steps
 - [x] Finish transition to project format from csx
