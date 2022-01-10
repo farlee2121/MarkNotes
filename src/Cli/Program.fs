@@ -37,10 +37,11 @@ let defaultSourceMapFormat = "```yml\n source: \"{source_path}\"\n``` \n\n"
 let defaultOutputSeparator = "\n\n---\n\n";
 
 let tagExtractionHandler (extractionOptions:TagExtractionOptions) =
-    let fileMatcher = new Matcher()
-    let inputFilePaths =
-        if (Path.IsPathFullyQualified(extractionOptions.InputFilePattern))
-        then seq {extractionOptions.InputFilePattern}
+
+    let patternToPaths (pathPattern:string) =
+        let fileMatcher = new Matcher()
+        if (Path.IsPathFullyQualified(pathPattern))
+        then seq {pathPattern}
         else fileMatcher.AddInclude(extractionOptions.InputFilePattern)
                             .GetResultsInFullPath(Directory.GetCurrentDirectory())
 
@@ -49,15 +50,15 @@ let tagExtractionHandler (extractionOptions:TagExtractionOptions) =
         let extractedContent = TagExtraction.extract extractionOptions.Tags documentText
         extractedContent
 
-    let extractedContents = 
-        inputFilePaths 
-        |> Seq.map (fun path -> (path, extractSingleDocument path))
-        |> Seq.filter (fun (_, extracted)-> not (List.isEmpty extracted))
-
     let formatSingleFileExtactions (sourceMapFormat:string option) (path:string, extracted) =  
         let sourceMapFormat = (Option.defaultValue defaultSourceMapFormat sourceMapFormat) |> enableSpecialChars
         $"{sourceMapFormat |> interpolateFileInfo path}{String.joinParagraphs extracted}"
 
+    let inputFilePaths = patternToPaths extractionOptions.InputFilePattern
+    let extractedContents = 
+        inputFilePaths 
+        |> Seq.map (fun path -> (path, extractSingleDocument path))
+        |> Seq.filter (fun (_, extracted)-> not (List.isEmpty extracted))
 
     let documentOutputSeparator = (Option.defaultValue defaultOutputSeparator extractionOptions.DocumentOutputSeparator) |> enableSpecialChars
     let joinedOutput = String.join documentOutputSeparator (extractedContents |> Seq.map (formatSingleFileExtactions extractionOptions.SourceMapFormat))
