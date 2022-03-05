@@ -12,17 +12,32 @@ module Option =
         | _ -> Some obj
 
 module Cli =
+    type Command' = {
+        Name : string
+        Description : string option
+        Inputs : Symbol list
+        Children : Symbol list option
+        Handler : ICommandHandler
+    }
 
     let root description (symbols: Symbol list) =
         let root = new RootCommand(description)
         symbols |> List.map root.Add |> ignore
         root
 
-    let command<'a> name description (symbols: Symbol list) (handler: ICommandHandler) =
+    let command name description (symbols: Symbol list) (handler: ICommandHandler) =
         let command = new Command(name, description)
         symbols |> List.map command.Add |> ignore
         
         command.Handler <- handler
+        command
+
+    let commandMap (map: Command') =
+        let command = new Command(map.Name, (Option.defaultValue null map.Description))
+        command.Handler = map.Handler |> ignore
+        let allSymbols = List.append map.Inputs (Option.defaultValue [] map.Children)
+        allSymbols |> List.map command.Add |> ignore
+
         command
 
     let option<'a> (aliases: string list) description =
@@ -37,13 +52,10 @@ module Cli =
 
     module CommandHandler = 
         let fromPropertyMap (binders: IPropertyBinder<'a> list) (handler: 'a -> 'b) : ICommandHandler =
-            CommandHandler.FromPropertyMap (handler, (new BinderPipeline<'a>(binders)))
+            (new BinderPipeline<'a>(binders)).ToHandler(handler)
 
     module PropertyMap =
-        open Microsoft.FSharp.Quotations
-        open Microsoft.FSharp.Linq.RuntimeHelpers.LeafExpressionConverter
-        open System.Linq.Expressions
         
         let nameAndSetter name (setter: 'a -> 'b -> 'a) = 
-            PropertyMap.FromName(name, setter = setter)
+            new SymbolNamePropertyBinder<'a, 'b>(name, propertySetter = setter) :> IPropertyBinder<'a>
 
