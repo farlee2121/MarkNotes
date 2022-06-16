@@ -1,6 +1,6 @@
 # Notedown
 
-[![](https://badgen.net/github/release/farlee2121/Notedown)](https://github.com/farlee2121/Notedown/releases) | [![Build](https://github.com/farlee2121/Notedown/actions/workflows/ci.yml/badge.svg)](https://github.com/farlee2121/Notedown/actions/workflows/ci.yml)
+[![](https://badgen.net/github/release/farlee2121/Notedown)](https://github.com/farlee2121/Notedown/releases)  [![Build](https://github.com/farlee2121/Notedown/actions/workflows/ci.yml/badge.svg)](https://github.com/farlee2121/Notedown/actions/workflows/ci.yml)
 
 Notedown is a [set of conventions](https://spencerfarley.com/2021/03/05/reference-ready-notes/) for notes in markdown and tools that operate on the conventions.
 These conventions aim to
