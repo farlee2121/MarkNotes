@@ -3,7 +3,24 @@
     <OutputType>Exe</OutputType>
     <AssemblyName>notedown</AssemblyName>
     <TargetFramework>net6.0</TargetFramework>
+
+    <PackAsTool>true</PackAsTool>
   </PropertyGroup>
+  <PropertyGroup>
+    <ToolCommandName>notedown</ToolCommandName>
+		<PackageId>Notedown.Cli</PackageId>
+		<Title>Notedown.Cli</Title>
+		<VersionPrefix>0.1.0</VersionPrefix>
+		<Description>
+			Notedown is a set of markdown note-taking conventions that double as a light data format. This tool enables programmatic interaction with notes based on those conventions. 
+		</Description>
+		<Authors>Spencer Farley</Authors>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<RepositoryUrl>https://github.com/farlee2121/Notedown</RepositoryUrl>
+		<PackageTags>notes;markdown;convention</PackageTags>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Include="System.CommandLineWrapper.fs" />
     <Compile Include="Program.fs" />
@@ -16,4 +33,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.fsproj" />
   </ItemGroup>
+
+  <ItemGroup>
+		<None Include="..\..\README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
 </Project>
