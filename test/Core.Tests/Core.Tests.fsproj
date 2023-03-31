@@ -1,25 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-
     <IsPackable>false</IsPackable>
     <GenerateProgramFile>false</GenerateProgramFile>
-	  <AssemblyName>Notedown.Core.Tests</AssemblyName>
-	  <RootNamespace>Notedown.Core.Tests</RootNamespace>
+    <AssemblyName>Notedown.Core.Tests</AssemblyName>
+    <RootNamespace>Notedown.Core.Tests</RootNamespace>
   </PropertyGroup>
-
   <ItemGroup>
     <Compile Include="UnquoteAliases.fs" />
     <Compile Include="TreeUtilityTests.fs" />
     <Compile Include="TagExtractionTests.fs" />
+    <Compile Include="NoteModelTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="../../src/Core/Core.fsproj" />
   </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />
     <PackageReference Include="Expecto.FsCheck" Version="9.0.4" />
@@ -36,5 +32,4 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
-
 </Project>
