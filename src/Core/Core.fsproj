@@ -8,6 +8,7 @@
     <Compile Include="ListExtensions.fs" />
     <Compile Include="StringExtensions.fs" />
     <Compile Include="TreeUtils.fs" />
+    <Compile Include="StructuralDictionary.fs" />
     <Compile Include="NoteModel.fs" />
     <Compile Include="TagExtraction.fs" />
     <PackageReference Include="Markdig" Version="0.26.0" />
