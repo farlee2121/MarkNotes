@@ -4,6 +4,7 @@ open System.CommandLine
 open System.CommandLine.PropertyMapBinder
 open System.CommandLine.Invocation
 open System
+open System.CommandLine.PropertyMapBinder.PropertyBinders
 
 module Option =
     let ofObj obj = 
@@ -20,14 +21,21 @@ module Cli =
         Handler : ICommandHandler
     }
 
+    let addSymbol (command: Command) (symbol:Symbol) =
+        match symbol with
+        | :? Option as opt -> command.Add(opt)
+        | :? Argument as opt -> command.Add(opt)
+        | :? Command as opt -> command.Add(opt)
+        | _ -> invalidArg (nameof symbol) $"Unsupported symbol type. Value { symbol }"
+
     let root description (symbols: Symbol list) =
         let root = new RootCommand(description)
-        symbols |> List.map root.Add |> ignore
+        symbols |> List.map (addSymbol root) |> ignore
         root
 
     let command name description (symbols: Symbol list) (handler: ICommandHandler) =
         let command = new Command(name, description)
-        symbols |> List.map command.Add |> ignore
+        symbols |> List.map (addSymbol command) |> ignore
         
         command.Handler <- handler
         command
@@ -36,7 +44,7 @@ module Cli =
         let command = new Command(map.Name, (Option.defaultValue null map.Description))
         command.Handler = map.Handler |> ignore
         let allSymbols = List.append map.Inputs (Option.defaultValue [] map.Children)
-        allSymbols |> List.map command.Add |> ignore
+        allSymbols |> List.map (addSymbol command) |> ignore
 
         command
 
