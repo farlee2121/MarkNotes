@@ -7,13 +7,21 @@ type MetadataValue =
 
 type SectionMeta = StructuralDictionary<string,MetadataValue>
 
+type HeadingLevel = int
+type SectionLevel = 
+    | Root
+    | Heading of HeadingLevel
+
 type Section = {
+    Level: SectionLevel
     Meta: SectionMeta
 } 
+
 
 
 module NoteModel = 
 
     let parse () : Section = {
+        Level = SectionLevel.Root
         Meta = StructuralDictionary.empty
     }

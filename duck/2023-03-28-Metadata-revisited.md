@@ -32,6 +32,7 @@ GOAL: Add a CLI command for getting sections based on some meta key-value pair
 - [ ] Be able to construct a data model with parsed meta
 - [ ] Use the object model to filter sections
 - [ ] FAKE build to standardize release process
+- [ ] move StructuralDictionary into a standalone package? (and post it https://stackoverflow.com/questions/3804367/testing-for-equality-between-dictionaries-in-c-sharp)
 - [ ] update ReadMe
 
 

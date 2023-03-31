@@ -15,8 +15,12 @@ module DictLikeness =
 
 [<Tests>]
 let metadataModelTests = testList "Metadata Model" [
-    testCase "GIVEN an empty file WHEN i build the section model THEN there is no metadata"  <| fun () ->
+    testCase """GIVEN an empty file WHEN i build the section model 
+        THEN there is no metadata 
+        AND the section level is document/root
+        """  <| fun () ->
         let expected = {
+            Level = SectionLevel.Root
             Meta = StructuralDictionary.empty
         }
         let actual = NoteModel.parse ()
