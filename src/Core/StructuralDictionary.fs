@@ -9,7 +9,8 @@ module internal StructuralDictionaryInternal =
         && left.Value = right.Value
 
     let equals left right =
-        Seq.forall2 kvpEqual left right
+        Seq.length left = Seq.length right
+        && Seq.forall2 kvpEqual left right
 
 type StructuralDictionary<'key, 'value when 'key:equality and 'value: equality> =
     inherit Dictionary<'key, 'value>
@@ -42,3 +43,5 @@ type StructuralDictionary<'key, 'value when 'key:equality and 'value: equality> 
 module StructuralDictionary =
     let empty<'key, 'value when 'key:equality and 'value:equality> = new StructuralDictionary<'key, 'value>()
     let fromDict (dict:IDictionary<'key,'value>) = StructuralDictionary(dict)
+
+    let sdict tupleList = StructuralDictionary(dict tupleList)
