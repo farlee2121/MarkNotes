@@ -15,13 +15,17 @@ type SectionLevel =
 type Section = {
     Level: SectionLevel
     Meta: SectionMeta
-} 
+    ExclusiveContent: string
+}
 
-
+type Section with
+    member this.Content() =
+        this.ExclusiveContent
 
 module NoteModel = 
 
-    let parse () : Section = {
+    let parse (document: string) : Section = {
         Level = SectionLevel.Root
         Meta = StructuralDictionary.empty
+        ExclusiveContent = document
     }

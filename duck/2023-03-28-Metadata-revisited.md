@@ -147,3 +147,47 @@ type StructuralDictionary<'key, 'value when 'key:equality and 'value: equality> 
         member this.Equals (other) : bool =
             StructuralDictionary.equals this other
 ```
+
+
+### Content Ref
+
+I want to model section content as a reference or getter, not a direct value. 
+It seems likely that data models could grow excessively large very quickly if each section contains a copy of contents.
+Especially since sections can be deeply nested and that content would be duplicated in every parent.
+
+Instead I'd like to do something like a stream where the consumer can pull just that content into memory when they need it.
+
+- OPT: A function
+  - PRO: very simple in F# with no need to create derivatives for different approaches
+  - CON: not equateable
+    - Q: If I give it a NoEqualityAttribute, then how will equality for the containing record behave?
+      - A: The containing type will no longer support equality. Throws compile-time error
+- OPT: Interface & objects
+  - PRO: more control over behaviors. i.e. equality can be based on ranges instead of fetching content if compared instances both support it
+  - PRO: more intuitive for C# users
+  - CON: implementing different approaches requires more effort
+- OPT: Streams
+  - I need to test this a bit. Overall I haven't found streams very intuitive to work with
+    - I don't want to limit myself to file streams, but general streams are a bit unintuitive. You have to use a stream reader...
+    - Maybe I provide my own derivative of stream and/or provide my own helper method like `System.IO.File` methods..
+  - PRO: Possibly even more granular streaming for sections and documents that are very large
+  - PRO: can use existing .NET tools for streaming large amounts of data
+  - CON: Complex to implement
+    - stream is abstract. I'd have to create a derivative (or several) that support all those methods
+    - IDEA: I might be able to get away with basing my type mostly on `FileStream`. Basing my stream on FileStream plus the character range would prevent worries about object reference lifetimes. 
+      - However, I need to think about cases where there isn't a file being parsed and the markdown sources from in-memory.
+      - This is really tricky because I'd need to start the process knowing where the markdown sources from and track that knowledge.
+      - I'm currently always bringing the whole file into memory to parse it anyway. That means I don't realize benefits unless I can manage the whole parsing process with streaming, which seems unlikely. No MarkDig overloads support streams.
+        - to clarify. I don't realize benefits over just using a function to point to the original markdig object. There is still benefit in not replicating section contents throughout a hierarchy
+          - OPT: this problem can also be solved by only copying top-level contents into the section and stitching together total content by appending child section contents
+            - Could call this property "ExclusiveContent"
+            - PRO: I minimize in-memory load without creating indirection / using streaming
+            - CON: not sure this approach is the most intuitive. 
+              - Though I can probably solve that with an extension method. Then `.Content()` is discoverable similar to a property
+        - I suppose I just need to be careful to only handle one file at a time
+- OPT: Bail on it for now and just use strings for now
+  - CON: could be hard to change later
+  - PRO: I can get into more immediately valuable usecases
+- A: ExclusiveContent
+  - Minimize memory load while avoiding indirection or streaming complexity
+  - It'll probably be a lot of work if I ever switch to streaming, but streaming is a lot of complexity now that keeps me from moving on to more immediate and known value 
