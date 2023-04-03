@@ -3,17 +3,7 @@ module TagExtraction =
     open Markdig
     open Markdig.Syntax
 
-    let private spanToText (source: string) (span:SourceSpan) =
-        source.Substring (span.Start, span.Length)
-
-    let blockToMarkdownText (markdownNode:MarkdownObject) =
-        let sw = new System.IO.StringWriter()
-        let renderer = new Markdig.Renderers.Roundtrip.RoundtripRenderer(sw)
-        renderer.Write(markdownNode)
-        sw.ToString()
-
-
-
+    
     let private computeContainingSpan (blocks: MarkdownObject seq) =
         let spanStart =
             blocks |> Seq.map (fun block -> block.Span.Start)
@@ -64,11 +54,11 @@ module TagExtraction =
             //NOTE: This could really be a separated into a list of predicates if I wanted it to be easy to configure / partially customize
             match node with
             | :? HeadingBlock as h ->
-                doesTextContainTag keyPhrases (blockToMarkdownText h)
+                doesTextContainTag keyPhrases (MarkdigExtensions.blockToMarkdownText h)
             | :? ParagraphBlock as p when (p.Parent :? MarkdownDocument) ->
-                doesTextContainTag keyPhrases (blockToMarkdownText p)
+                doesTextContainTag keyPhrases (MarkdigExtensions.blockToMarkdownText p)
             | :? ListItemBlock as li ->
-                doesTextContainTag keyPhrases (blockToMarkdownText (List.headOr (List.ofSeq li) li))
+                doesTextContainTag keyPhrases (MarkdigExtensions.blockToMarkdownText (List.headOr (List.ofSeq li) li))
             | _ -> false
  
         //NOTE: .Descendants is already recursive and returns the full hierarchy as a flat list.
@@ -84,13 +74,13 @@ module TagExtraction =
 
         let headingToSectionContentString headingBlock =
             let blocks = getHeadingWithContents parsedDocument headingBlock |> Seq.cast<MarkdownObject> 
-            spanToText markdownDocument (computeContainingSpan blocks)
+            MarkdigExtensions.spanToText markdownDocument (computeContainingSpan blocks)
 
         let paragraphToContentString (paragraphBlock: ParagraphBlock) =
             let getNextBlock block = parsedDocument |> Seq.skipWhile (isSameBlock block) |> Seq.tryHead
-            let defaultRender () = spanToText markdownDocument paragraphBlock.Span
+            let defaultRender () = MarkdigExtensions.spanToText markdownDocument paragraphBlock.Span
             let renderWithList list =
-                spanToText markdownDocument (computeContainingSpan [paragraphBlock; list])
+                MarkdigExtensions.spanToText markdownDocument (computeContainingSpan [paragraphBlock; list])
 
             let contentString =
                 match paragraphBlock.LinesAfter with
@@ -109,7 +99,7 @@ module TagExtraction =
             match block with
             | :? HeadingBlock as h -> headingToSectionContentString h
             | :? ParagraphBlock as p -> paragraphToContentString p
-            | _ -> spanToText markdownDocument block.Span
+            | _ -> MarkdigExtensions.spanToText markdownDocument block.Span
 
         reduceToTaggedBlocks tags parsedDocument
         |> List.map blockToMarkdownText'

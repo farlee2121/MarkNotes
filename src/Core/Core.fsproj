@@ -9,8 +9,12 @@
     <Compile Include="StringExtensions.fs" />
     <Compile Include="TreeUtils.fs" />
     <Compile Include="StructuralDictionary.fs" />
+    <Compile Include="MarkdigExtensions.fs" />
     <Compile Include="NoteModel.fs" />
     <Compile Include="TagExtraction.fs" />
-    <PackageReference Include="Markdig" Version="0.26.0" />
   </ItemGroup>
+	<ItemGroup>
+        <PackageReference Include="Markdig" Version="0.26.0" />
+		<PackageReference Include="YamlDotNet" Version="13.0.2" />
+	</ItemGroup>
 </Project>

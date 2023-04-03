@@ -44,4 +44,7 @@ module StructuralDictionary =
     let empty<'key, 'value when 'key:equality and 'value:equality> = new StructuralDictionary<'key, 'value>()
     let fromDict (dict:IDictionary<'key,'value>) = StructuralDictionary(dict)
 
+
+[<AutoOpen>]
+module _StructuralDictionaryConstructor =
     let sdict tupleList = StructuralDictionary(dict tupleList)

@@ -149,6 +149,14 @@ type StructuralDictionary<'key, 'value when 'key:equality and 'value: equality> 
 ```
 
 
+Q: should title and meta be included in section contents?
+- I think so.
+- Q: Where would document meta belong if not to the root contents?
+  - I suppose it could belong only as the parsed structure and content could be only the child data
+- I think the semantic of "Contents" suggest it's not inclusive of the container or meta, which is the section itself
+- Maybe the real change here is the naming like `ExclusiveText` and `FullText` or `CompleteText`
+
+
 ### Content Ref
 
 I want to model section content as a reference or getter, not a direct value. 
@@ -191,3 +199,34 @@ Instead I'd like to do something like a stream where the consumer can pull just 
 - A: ExclusiveContent
   - Minimize memory load while avoiding indirection or streaming complexity
   - It'll probably be a lot of work if I ever switch to streaming, but streaming is a lot of complexity now that keeps me from moving on to more immediate and known value 
+
+
+
+
+## simple Parsing
+
+I think I need to reconsider having the root section meta be a structural dictionary instead of MetadataValue.
+- OPT: Keep the dictionary
+  - pro: can check top-level keys easily and intuitively
+  - CON: the top level behaves differently than the rest of the recursive structure
+- OPT: Use a MetadataValue
+  - CON: It's hard for the user to even check top-level keys, which is likely a common task
+    - Q: Can I add a helper to check for path existence and extraction? 
+      - something path-based like `MetadataValue.tryGet "foo.bar" meta`
+  - PRO: Makes access of the metadata more uniform. They'll have to pattern match at some point
+  - PRO: I could allow the top-level meta to be something other than a map type
+
+
+Two remaining tasks
+- block to text
+- YamlDotNet model to internal model
+
+Q: Why do I use the RoundTripRenderer for checking contents for tags but not for clipping extracted sections?
+- ???
+
+Q: What kinds of YamlNodes are there
+- `YamlScalarNode`, `YamlAliasNode`, `YamlSequenceNode`, `YamlMappingNode`
+- Q: What is an AliasNode?
+  - https://stackoverflow.com/questions/70975523
+  - Can assign values to names
+  - I don't think I should handle these for now

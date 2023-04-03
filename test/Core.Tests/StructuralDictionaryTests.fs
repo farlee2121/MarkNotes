@@ -5,7 +5,6 @@ open Notedown.Core
 open UnquoteAliases
 open Swensen.Unquote.Assertions
 open System.Collections.Generic
-open Notedown.Core.StructuralDictionary
 
 [<Tests>]
 let structuralDictionaryTests =
