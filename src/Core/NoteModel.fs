@@ -47,10 +47,10 @@ module NoteModel =
             KeyValuePair((mapKey kvp.Key), (mapValue kvp.Value))
 
         let yamlNodeToMetaModel (node: YamlNode) : MetadataValue =
-            // This will probably be recursive
             let rec recurse (node: YamlNode) =
                 match node with
                 | :? YamlScalarNode as scalar -> scalar.Value |> MetadataValue.SingleValue
+                | :? YamlSequenceNode as vec -> vec.Children |> Seq.map recurse |> List.ofSeq |> MetadataValue.Vector
                 | :? YamlMappingNode as map ->
                     map.Children |> Seq.map (mapKvp extractMapKey recurse) |> StructuralDictionary |> MetadataValue.Complex 
                 | node -> MetadataValue.SingleValue $"Unsupported yaml: {node |> nodeToText}"

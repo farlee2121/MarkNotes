@@ -230,3 +230,8 @@ Q: What kinds of YamlNodes are there
   - https://stackoverflow.com/questions/70975523
   - Can assign values to names
   - I don't think I should handle these for now
+
+PICKUP: Some example-based meta to make sure I support arrays and nested complex values
+- then maybe a property test to text edge cases. Just generate a meta tree, convert it to yaml, then use that as my document
+- after that is individual headings, then nested headings
+  - probably test different heading levels at top level of document to make sure I can use an h2 not under an h1 etc
