@@ -15,6 +15,10 @@ type MetadataValue =
     | Vector of MetadataValue list
     | Complex of StructuralDictionary<string, MetadataValue>
 
+module MetadataValue =
+    let default' = Complex StructuralDictionary.empty
+    let fromPairs t = sdict t |> Complex 
+
 type HeadingLevel = int
 type SectionLevel = 
     | Root
@@ -24,6 +28,7 @@ type Section = {
     Level: SectionLevel
     Meta: MetadataValue
     ExclusiveText: string
+    Children: Section list
 }
 
 type Section with
@@ -74,31 +79,55 @@ module NoteModel =
             | Some root -> root |> yamlNodeToMetaModel 
             | None -> MetadataValue.Complex StructuralDictionary.empty
 
+
     let parse (document: string) : Section =
         if (document = "") then
             {
                 Level = SectionLevel.Root
                 Meta = sdict [] |> Complex
                 ExclusiveText = document
+                Children = []
             }
         else
+
             let pipeline = MarkdownPipelineBuilder().UseAdvancedExtensions().UseYamlFrontMatter().EnableTrackTrivia().Build()
             let markdownModel = Markdown.Parse(document, pipeline)
 
-            let tryYamlBlock (block:Block) =
-                match block with
-                | :? YamlFrontMatterBlock as yml -> Some yml
-                | _ -> None
+            let yamlBlock = markdownModel |> Seq.tryPick tryUnbox<YamlFrontMatterBlock>
 
-            let yamlBlock = markdownModel |> Seq.tryPick tryYamlBlock
+            let maybeHeading = markdownModel |> Seq.tryPick tryUnbox<HeadingBlock>
+            let maybeYamlBlock = markdownModel |> Seq.tryPick tryUnbox<FencedCodeBlock>
+            
 
-            let rootMeta =
-                match yamlBlock with
-                | Some ymlBlock -> ymlBlock |> MarkdigExtensions.blockToMarkdownText |> Yaml.parseYaml
-                | None -> MetadataValue.Complex StructuralDictionary.empty
+            match maybeHeading with
+            | Some heading ->
+                let maybeMetaText = maybeYamlBlock |> Option.bind (fun codeBlock -> codeBlock.Lines |> string |> Some)
+                let parsedMeta =
+                    match maybeMetaText with
+                    | Some metaYaml -> Yaml.parseYaml metaYaml
+                    | None -> MetadataValue.default'
+                {
+                    Level = SectionLevel.Root
+                    Meta = sdict [] |> Complex
+                    ExclusiveText = ""
+                    Children = [
+                        {
+                            Level = SectionLevel.Heading 1
+                            Meta = parsedMeta
+                            ExclusiveText = document
+                            Children = []
+                        }
+                    ]
+                }
+            | None ->
+                let rootMeta =
+                    match yamlBlock with
+                    | Some ymlBlock -> ymlBlock |> MarkdigExtensions.blockToMarkdownText |> Yaml.parseYaml
+                    | None -> MetadataValue.Complex StructuralDictionary.empty
 
-            {
-                Level = SectionLevel.Root
-                Meta = rootMeta
-                ExclusiveText = document
-            }
+                {
+                    Level = SectionLevel.Root
+                    Meta = rootMeta
+                    ExclusiveText = document
+                    Children = []
+                }

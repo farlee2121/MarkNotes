@@ -1,0 +1,59 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"name":"csharp"}]}}
+
+#!csharp
+
+#r "nuget: Markdig.Signed, 0.30.0"
+#nullable enable
+
+public static U? Pick<T, U>(this IEnumerable<T> source, Func<T, U> f)
+{
+    foreach (var item in source)
+    {
+        var mapped = f(item);
+        if (mapped != null) return mapped;
+    }
+    return default(U);
+}
+
+#!csharp
+
+using Markdig;
+using Markdig.Syntax;
+using Markdig.Extensions.Yaml;
+
+
+
+
+T? TryUnbox<T>(object obj){
+    if(obj is T cast) return cast;
+    else return default(T);
+}
+
+string BlockToMarkdownText (MarkdownObject markdownNode){
+    var sw = new System.IO.StringWriter();
+    var renderer = new Markdig.Renderers.Roundtrip.RoundtripRenderer(sw);
+    renderer.Write(markdownNode);
+    return sw.ToString();
+}
+    
+
+var document =
+    """
+    # Title 
+    ```yml
+      rating: 5
+      author: Spencer
+      complex:
+        hi: 5
+    ```
+    """;
+
+var pipeline = new MarkdownPipelineBuilder().UseYamlFrontMatter().EnableTrackTrivia().Build();
+var markdownModel = Markdown.Parse(document, pipeline);
+
+var codeBlock = markdownModel.Pick(TryUnbox<FencedCodeBlock>);
+codeBlock.Lines.ToString()
+// BlockToMarkdownText(codeBlock.Lines)
+//.Select<MarkdownObject,string>(BlockToMarkdownText)

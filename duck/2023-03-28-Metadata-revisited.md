@@ -32,7 +32,9 @@ GOAL: Add a CLI command for getting sections based on some meta key-value pair
 - [ ] Be able to construct a data model with parsed meta
 - [ ] Use the object model to filter sections
 - [ ] FAKE build to standardize release process
-- [ ] move StructuralDictionary into a standalone package? (and post it https://stackoverflow.com/questions/3804367/testing-for-equality-between-dictionaries-in-c-sharp)
+- [ ] find a better way of skipping to a known value in the document other than iterating over the doc until I find it
+- [ ] move StructuralDictionary into a standalone package? (Maybe call it EquatableDictionary? and Structural dictionary is equivalence of just keys) (and post it https://stackoverflow.com/questions/3804367/testing-for-equality-between-dictionaries-in-c-sharp)
+- [ ] Release as a library and not just a cli tool?
 - [ ] update ReadMe
 
 
@@ -222,7 +224,8 @@ Two remaining tasks
 - YamlDotNet model to internal model
 
 Q: Why do I use the RoundTripRenderer for checking contents for tags but not for clipping extracted sections?
-- ???
+- I know headings also need to get section content...
+- Oh yeah! Paragraphs can also be followed immediately by a list
 
 Q: What kinds of YamlNodes are there
 - `YamlScalarNode`, `YamlAliasNode`, `YamlSequenceNode`, `YamlMappingNode`
@@ -235,3 +238,16 @@ PICKUP: Some example-based meta to make sure I support arrays and nested complex
 - then maybe a property test to text edge cases. Just generate a meta tree, convert it to yaml, then use that as my document
 - after that is individual headings, then nested headings
   - probably test different heading levels at top level of document to make sure I can use an h2 not under an h1 etc
+
+
+## Include Tags in Model?
+Q: Should I also model tags as part of the note model?
+
+It could be a nice option, but I also think it could make the model too heavy if included by default.
+Perhaps I have some option to identify all tags on-demand. By default it would have to be some alphanumeric followed by a colon and not include spaces 
+or any colon would cause preceding text to become a tag.
+
+It would be pretty fun to make a visual graph of notes. Even one that updates as the user types notes.
+Might be a good portfolio item. 
+- I could explain notedown in markdown used to generate the graph visualizing notedown
+- maybe even make a logo like the markdown logo, but with an N instead
