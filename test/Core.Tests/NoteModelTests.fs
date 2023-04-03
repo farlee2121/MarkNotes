@@ -73,7 +73,7 @@ let metadataModelTests = testList "Note Model" [
         "should parse array meta"
         <| fun () ->
             let document =
-                $"\
+                "\
                 ---\n\
                   author: [Spencer, David, Joe]\n\
                 ---\n\
@@ -93,7 +93,7 @@ let metadataModelTests = testList "Note Model" [
         "should parse heterogeneous arrays of meta"
         <| fun () ->
             let document =
-                $"\
+                "\
                 ---\n\
                   author: [Spencer, [David], {{hi: 5}}]\n\
                 ---\n\
@@ -108,6 +108,40 @@ let metadataModelTests = testList "Note Model" [
                         Complex (sdict ["hi", SingleValue "5"])
                     ]
                 ] |> Complex
+                ExclusiveText = document
+            }
+
+            let actual = NoteModel.parse document
+
+            expected =! actual
+
+    testCase
+        "should parse nested maps of meta"
+        <| fun () ->
+            // beware the funky spacing require here
+            // \n  \  is adding two spaces in front of the nested properties. Not sure how to make this more intuitive since F# doesn't support relative formatting like C#'s triple quote.
+            // F# triple quote is just a literal string that ignores escape sequences
+            let document =
+                "\
+                ---\n\
+                  author: Spencer\n\
+                  config: \n  \
+                    foo: 5\n  \
+                    bar: {{baz: 8}}\n\
+                ---\n\
+                "
+
+            let expected = {
+                Level = SectionLevel.Root
+                Meta = (Complex << sdict) [
+                    "author", SingleValue "Spencer"
+                    "config", (Complex << sdict) [
+                        "foo", SingleValue "5"
+                        "bar", (Complex << sdict) [
+                            "baz", SingleValue "8"
+                        ] 
+                    ]
+                ]
                 ExclusiveText = document
             }
 
