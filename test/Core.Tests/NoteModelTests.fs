@@ -20,9 +20,7 @@ let emptyMeta = MetadataValue.Complex StructuralDictionary.empty
 [<Tests>]
 let metadataModelTests = testList "Note Model" [
     testCase
-        "GIVEN an empty file WHEN i build the section model 
-        THEN there is no metadata 
-        AND the section level is document/root"
+        "should return an empty root-level section when given an empty document"
         <| fun () ->
             let document = ""
             let expected = {
@@ -36,10 +34,7 @@ let metadataModelTests = testList "Note Model" [
             expected =! actual
 
     testProperty
-        "GIVEN an non-empty file with no meta WHEN i build the section model 
-        THEN there is no metadata 
-        AND the section level is document/root
-        AND the section content is the whole document"
+        "should return a empty meta but all contents when given a document with no frontmatter"
         <| fun (document: NonEmptyString) ->
             let expected = {
                 Level = SectionLevel.Root
@@ -53,8 +48,7 @@ let metadataModelTests = testList "Note Model" [
             document.Get =! actual.Text() 
 
     testCase
-        "GIVEN document meta with a simple key value pair 
-        THEN that key-value are parsed"
+        "should parse simple key-value meta"
         <| fun () ->
             let expectedKey = "rating";
             let expectedValue = 5;
@@ -76,8 +70,7 @@ let metadataModelTests = testList "Note Model" [
             expected =! actual
 
     testCase
-        "GIVEN document meta with an array value
-        THEN that key-value is parsed as an array of meta"
+        "should parse array meta"
         <| fun () ->
             let document =
                 $"\
@@ -97,8 +90,7 @@ let metadataModelTests = testList "Note Model" [
             expected =! actual
 
     testCase
-        "GIVEN document meta with a heterogeneous array
-        THEN array values are parsed as the relevant meta type"
+        "should parse heterogeneous arrays of meta"
         <| fun () ->
             let document =
                 $"\
