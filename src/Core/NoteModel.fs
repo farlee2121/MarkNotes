@@ -80,8 +80,14 @@ module NoteModel =
             | None -> MetadataValue.Complex StructuralDictionary.empty
 
 
+    type private HeadingHierarchy = {
+        Heading: HeadingBlock
+        Children: HeadingHierarchy list
+    }
+
+
     let parse (document: string) : Section =
-        if (document = "") then
+        if (String.IsNullOrEmpty document) then
             {
                 Level = SectionLevel.Root
                 Meta = sdict [] |> Complex
@@ -97,11 +103,18 @@ module NoteModel =
 
             let maybeHeading = markdownModel |> Seq.tryPick tryUnbox<HeadingBlock>
             let maybeYamlBlock = markdownModel |> Seq.tryPick tryUnbox<FencedCodeBlock>
-            
+
 
             match maybeHeading with
             | Some heading ->
-                let maybeMetaText = maybeYamlBlock |> Option.bind (fun codeBlock -> codeBlock.Lines |> string |> Some)
+                let tryGetYamlFromCodeBlock (codeBlock:FencedCodeBlock) =
+                    let allowedIdentifiers = set ["yml"; "yaml"]
+                    if(allowedIdentifiers.Contains(codeBlock.Info))
+                    then
+                        codeBlock.Lines |> string |> Some
+                    else None
+
+                let maybeMetaText = maybeYamlBlock |> Option.bind tryGetYamlFromCodeBlock
                 let parsedMeta =
                     match maybeMetaText with
                     | Some metaYaml -> Yaml.parseYaml metaYaml

@@ -234,11 +234,46 @@ Q: What kinds of YamlNodes are there
   - Can assign values to names
   - I don't think I should handle these for now
 
-PICKUP: Some example-based meta to make sure I support arrays and nested complex values
+PICKUP: 
 - then maybe a property test to text edge cases. Just generate a meta tree, convert it to yaml, then use that as my document
-- after that is individual headings, then nested headings
+- after that is individual headings
   - probably test different heading levels at top level of document to make sure I can use an h2 not under an h1 etc
+- Nesting without inheritance
+- Nesting with inheritance
 
+Q: How do I generate MetadataValue trees that I can be sure translate to valid YAML?
+- It'd be nice if I could replace the string arb with the `XmlEncodedString` arb for just this one context
+  - That should be possible in FsCheck 3 based on the work I did
+  - Q: Can expecto work with fsCheck 3?
+    - A: no
+  - Q: Is it much effort to create a migrated version of expecto?
+    - Apparently it is for me. I need to figure out how to work with Expecto's codebase better
+    - I'm getting a bunch of package warnings that tell me I should probably just split out a new project to kick the tires first
+    - But, i'm going to set it aside for now. Notedown progress takes precedence
+  - Q: What did StdGen change to?
+    - there are now two Rnd values passed, which I think are supposed to be seed and Gamma, but that doesn't quite check out
+    - I should be able to find it if I can find a use of TestResult.Failed (formerly TestResult.False )
+    - It changed to Rnd and Replay
+      - In my case, I think expecto wants Seed and Size
+  - PICKUP figure out why tests failing 
+    - make sure all the tests pass on main (they do)
+    - size vs gamma for replay (take a look at what FsCheck runner.fs config used for replay before)? 
+
+Q: What should I collect when crawling for sections?
+- OPT: I could return full sections directly
+  - but... then I'll have to do some magic to figure out where each section ends. If I get headers first, then I can use adjacent headers to figure out exclusive content
+  - what about yaml blocks. It could be a big pain to go back and locate all the meta blocks
+    - OPT: Blocks have a line number and the document has a `FindClosestBlock(lineNumber)` and also `FindBlockAtPosition`. I don't know how efficient these are, but I might be able to use them to get blocks quickly
+      - this might also simplify
+      - Stuck: I'm waffling because the traditional functional approach seems inefficient
+        - I think the normal approach here would be to make a reduction... wait. I think I can do with without parent issues or windowing
+        - proceedural approach would be to use a stack
+        - Let's think about this. If I go from the top, then I'm looking to find every header until we reach one that's bigger than what I last visited. At that point I walk back and accumulate until I find a higher heading, I then make the collected nodes children of that node and put it on the stack. At this point I think I need to walk forward again 
+        - If I start from the bottom. Then I start by accumulating until I find a higher heading, then make the accumulated heading it's child. Accumulate again until I find a smaller or bigger heading. If smaller I need to set aside the "siblings" until I get back up to that heading level
+        - OK. I think I just do a stack from the top
+
+Q: How do I generate tree arbs again?
+- FsCheck has some examples
 
 ## Include Tags in Model?
 Q: Should I also model tags as part of the note model?

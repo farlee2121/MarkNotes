@@ -34,7 +34,7 @@ let metadataModelTests = testList "Note Model" [
 
     testProperty
         "should return a empty meta but all contents when given a document with no frontmatter"
-        <| fun (document: NonEmptyString) ->
+        <| fun (document: XmlEncodedString) ->
             let expected = {
                 Level = SectionLevel.Root
                 Meta = MetadataValue.default'
@@ -183,7 +183,7 @@ let metadataModelTests = testList "Note Model" [
             expected =! actual
 
     testCase
-        "should parse code blocks under headers as meta"
+        "should parse yaml code blocks under headers as meta"
         <| fun () ->
             // TODO: maybe remake this as a property. Probably need to register a custom Arb
             let document =
@@ -213,7 +213,40 @@ let metadataModelTests = testList "Note Model" [
             let actual = NoteModel.parse document
 
             expected =! actual
+
+    testCase
+        "should not parse code blocks not marked as yaml or yml"
+        <| fun () ->
+            // TODO: maybe remake this as a property. Probably need to register a custom Arb
+            let document =
+                "\
+                # Title \n\
+                ```cs\n\
+                  rating: 5\n\
+                ```\
+                "
+
+            let expected = {
+                Level = SectionLevel.Root
+                Meta = MetadataValue.default'
+                ExclusiveText = ""
+                Children = [
+                    {
+                        Level = SectionLevel.Heading 1
+                        ExclusiveText = document
+                        Meta = MetadataValue.default'
+                        Children = []
+                    }
+                ]
+            }
+
+            let actual = NoteModel.parse document
+
+            expected =! actual
+
+    
 ]
+
 
 
 // Tests:
