@@ -285,8 +285,14 @@ Q: What should I collect when crawling for sections?
           - we can solve this if we start the stack with root
         - I think I could get all these for free with Seq if I just define an iterator
           - might result in some extra array reversing though, but meh. 1000 would be an enormous number of sections
+        - Q: does mapFold address my need for prev?
         - Q: All this tree code is a bit messy and I'll probably need all the methods again for Section. Should i use a shared tree construct?
       - TODO: figure out nicer markdig extension namespacing
+
+Pickup: Get exclusive content working
+- use mapFoldBack?
+- hmm. I'm realizing that exclusive contents are easy to get when I have the heading list. I just iterate backwards. 
+  - The trick is making that available to sections. It'd be easy if I calculated contents before creating the hierarchy
 
 root
 #
