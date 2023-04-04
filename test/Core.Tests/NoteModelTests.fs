@@ -244,7 +244,50 @@ let metadataModelTests = testList "Note Model" [
 
             expected =! actual
 
-    
+    testCase
+        "should parse smaller headers as children of larger headers"
+        <| fun () ->
+            // TODO: maybe remake this as a property. Probably need to register a custom Arb
+            let document =
+                "\
+                # Title \n\
+                ## H2 \n\
+                ## H2 Again \n\
+                ### H3 \n\
+                # Title 2 \n\
+                ## Sub of 2 \n\
+                "
+
+            let sectionFromTitle title children =
+                {
+                    Level = SectionLevel.Heading (title |> Seq.where (fun c -> c = '#') |> Seq.length)
+                    ExclusiveText = title
+                    Meta = MetadataValue.default'
+                    Children = children
+                }
+            let expected = {
+                Level = SectionLevel.Root
+                Meta = MetadataValue.default'
+                ExclusiveText = ""
+                Children = [
+                    sectionFromTitle "# Title \n" [
+                        sectionFromTitle "## H2 \n" []
+                        sectionFromTitle "## H2 Again \n" [
+                            sectionFromTitle "### H3 \n" []
+                        ]
+                    ]
+                    sectionFromTitle "# Title 2 \n" [
+                        sectionFromTitle "## Sub of 2 \n" []
+                    ]
+                ]
+            }
+
+            let actual = NoteModel.parse document
+
+            expected =! actual
+
+    // section content shouldn't overlap and should sum to the original document
+    // not sure what's next. I think going straight to meta inheritance should be fine
 ]
 
 

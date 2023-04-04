@@ -30,6 +30,7 @@ GOAL: Add a CLI command for getting sections based on some meta key-value pair
 
 ## TODO
 - [ ] Be able to construct a data model with parsed meta
+- [ ] make a visualizer so I can show it off in a portfolio
 - [ ] Use the object model to filter sections
 - [ ] FAKE build to standardize release process
 - [ ] find a better way of skipping to a known value in the document other than iterating over the doc until I find it
@@ -271,6 +272,50 @@ Q: What should I collect when crawling for sections?
         - Let's think about this. If I go from the top, then I'm looking to find every header until we reach one that's bigger than what I last visited. At that point I walk back and accumulate until I find a higher heading, I then make the collected nodes children of that node and put it on the stack. At this point I think I need to walk forward again 
         - If I start from the bottom. Then I start by accumulating until I find a higher heading, then make the accumulated heading it's child. Accumulate again until I find a smaller or bigger heading. If smaller I need to set aside the "siblings" until I get back up to that heading level
         - OK. I think I just do a stack from the top
+      - Ugh. this is surprisingly annoying. I bet someone's done it 
+        - Yup, https://github.com/leisn/MarkdigToc. It's hard to follow though. I'm not sure where the parsing is being done
+        - wow there are some cool markdig extensions. including some that color code
+        - [DocFx](https://github.com/dotnet/docfx) has a lot of markdig code for turning markdown to documentation sites
+          - their table of contents code is massive https://github.com/dotnet/docfx/blob/cf300b61933725f993f8238e723eafd468a80251/src/Microsoft.DocAsCode.Build.TableOfContents/TocResolver.cs
+    - Q: do I have to worry about sibling accumulator conflicts?
+      - not if I go forward again whenever I reach a heading of equal level. There should never be smaller levels when going back because we stop when we encounter a larger heading
+      - Q: What about if smaller headings come before larger headings in the document?
+        - then they are siblings
+        - There could be a problem if the stack winds back to the end of the stack before we're through the whole list. then those items have nowhere to go
+          - we can solve this if we start the stack with root
+        - I think I could get all these for free with Seq if I just define an iterator
+          - might result in some extra array reversing though, but meh. 1000 would be an enormous number of sections
+        - Q: All this tree code is a bit messy and I'll probably need all the methods again for Section. Should i use a shared tree construct?
+      - TODO: figure out nicer markdig extension namespacing
+
+root
+#
+##
+###
+###
+##
+###
+#
+##
+
+###
+###
+#
+
+
+#
+###
+##
+#
+
+
+Q: How do build exclusive content
+- NOTE: the start of a section should always be predictable from the original blog
+  - I don't include span in the transformed node, just content. So really I want the untransformed block
+- Ok. I think I can do this if I use a reduce that builds a list while tracking previous
+- Trying to pass children and the previous node is proving hard to think about
+  - I could separate the two calculations. Do a scan over the blocks to get lengths then zip it with the mapped sections
+  - One way or the other i'm going to have to refer to the original document. I can't get full section content off of the headers
 
 Q: How do I generate tree arbs again?
 - FsCheck has some examples
