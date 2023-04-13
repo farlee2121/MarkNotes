@@ -311,13 +311,18 @@ Q: How do build exclusive content
   - I can always just use a windowing then map the windows a single node if needed. I can even make it lazy if I use Seq
     - this is more intuitive, but I'm also curious if mapFold can work just for learning sake
 
-Pickup: Figure out newline funk in tests
+
+PROBLEM: Newlines at the end of sections are making testing weird. Should I trim newlines?
+- I wouldn't get the original document if i don't track trivia (i.e. multiple newlines)
+- Q: How could I change my test arrangement or comparison?
+  - I could use likenesses to ignore whitespace, but I do want to compare whitespace
+- OPT: Maybe I trim exactly one trailing newline. Additional whitespace is still part of the section and the sections are reconstructed by joining with newlines
+  - This actually seems pretty intuitive. I generally wouldn't expect the whitespace if I see the sections as have no lines between each other 
+
+Pickup: 
 - Gather spans and meta blocks before mapping to Sections
   - For consistency in mapping, probably treat root as a conditional branch of header meta
 
-TODO: Newlines at the end of sections are making testing weird. Should I trim newlines?
-- I wouldn't get the original document if i don't track trivia (i.e. multiple newlines)
-- Q: How could I change my test arrangement or comparison?
 
 Q: How do I generate tree arbs again?
 - FsCheck has some examples

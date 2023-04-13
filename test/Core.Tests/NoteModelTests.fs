@@ -300,16 +300,16 @@ let metadataModelTests = testList "Note Model" [
                     "## H2"
                     "# H1"
                 ]
-                let document = String.joinLines lines  + "\n" 
+                let document = String.joinLines lines
 
-                let sectionFromTitle' title = sectionFromInnerTitle title []
+                let sectionFromTitle' title = sectionFromTitle title []
             
                 let expected = {
                     Level = SectionLevel.Root
                     Meta = MetadataValue.default'
                     ExclusiveText = ""
                     Children = 
-                        lines |> List.map sectionFromTitle' |> trimLast
+                        lines |> List.map sectionFromTitle'
                 }
 
                 let actual = NoteModel.parse document
@@ -325,9 +325,9 @@ let metadataModelTests = testList "Note Model" [
                     "### H3"
                     "## H2"
                 ]
-                let document = String.joinLines lines  + "\n" 
+                let document = String.joinLines lines
 
-                let sectionFromTitle' title = sectionFromInnerTitle title []
+                let sectionFromTitle' title = sectionFromTitle title []
             
                 let expected = {
                     Level = SectionLevel.Root
@@ -335,7 +335,7 @@ let metadataModelTests = testList "Note Model" [
                     ExclusiveText = ""
                     Children =
                        [
-                        sectionFromInnerTitle "# Parent" (lines |> List.skip 1 |> List.map sectionFromTitle' |> trimLast)
+                        sectionFromTitle "# Parent" (lines |> List.skip 1 |> List.map sectionFromTitle')
                        ]
                 }
 
@@ -352,16 +352,16 @@ let metadataModelTests = testList "Note Model" [
                     "### H3"
                     "#### h4"
                 ]
-                let document = String.joinLines lines  + "\n" 
+                let document = String.joinLines lines
 
-                let sectionFromTitle' title children = [sectionFromInnerTitle title children]
+                let sectionFromTitle' title children = [sectionFromTitle title children]
 
                 let expected = {
                     Level = SectionLevel.Root
                     Meta = MetadataValue.default'
                     ExclusiveText = ""
                     Children = 
-                         List.foldBack sectionFromTitle' (lines |> List.tailBack) [sectionFromTitle (lines |> List.last) []] 
+                         List.foldBack sectionFromTitle' lines [] 
                 }
 
                 let actual = NoteModel.parse document
@@ -379,20 +379,20 @@ let metadataModelTests = testList "Note Model" [
                     "# Title 2"
                     "## Sub of 2"
                 ]
-                let document = String.joinLines lines + "\n"
+                let document = String.joinLines lines
 
                 let expected = {
                     Level = SectionLevel.Root
                     Meta = MetadataValue.default'
                     ExclusiveText = ""
                     Children = [
-                        sectionFromInnerTitle "# Title" [
-                            sectionFromInnerTitle "## H2" []
-                            sectionFromInnerTitle "## H2 Again" [
-                                sectionFromInnerTitle "### H3" []
+                        sectionFromTitle "# Title" [
+                            sectionFromTitle "## H2" []
+                            sectionFromTitle "## H2 Again" [
+                                sectionFromTitle "### H3" []
                             ]
                         ]
-                        sectionFromInnerTitle "# Title 2" [
+                        sectionFromTitle "# Title 2" [
                             sectionFromTitle "## Sub of 2" []
                         ]
                     ]
@@ -426,19 +426,20 @@ let metadataModelTests = testList "Note Model" [
                 ]
                 let document = String.joinLines sectionsText
 
-                let sectionFromText text = sectionFromInnerTitle text []
+                let sectionFromText text = sectionFromTitle text []
 
                 let expected = {
                     Level = SectionLevel.Root
                     Meta = MetadataValue.default'
                     ExclusiveText = ""
-                    Children = sectionsText |> List.map sectionFromText |> trimLast
+                    Children = sectionsText |> List.map sectionFromText 
                 }
 
                 let actual = NoteModel.parse document
 
                 expected =! actual
-    // - for sibling sections
+
+                // PICKUP: Write more exclusive content tests. Then work on section meta. (don't forget full document reconstruction test)
     // - for parent and child
     // - root level content
     // - propterty: section content shouldn't overlap and should sum to the original document

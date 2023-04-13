@@ -98,6 +98,11 @@ module NoteModel =
             let maybeHeading = markdownModel |> Seq.tryPick tryUnbox<HeadingBlock>
             let maybeYamlBlock = markdownModel |> Seq.tryPick tryUnbox<FencedCodeBlock>            
 
+            let trimEndSingle (s:string) = 
+                if s.EndsWith("\n")
+                then s.Substring(0, s.Length-1)
+                else s
+
             let mapSection (node:MarkdigExtensions.HeadingHierarchy) (children:Section list) =
                 {
                     Level =
@@ -105,7 +110,7 @@ module NoteModel =
                         | 0 -> SectionLevel.Root
                         | n -> SectionLevel.Heading n
                     Meta = MetadataValue.default'
-                    ExclusiveText = node.SourceSpan |> MarkdigExtensions.spanToText document
+                    ExclusiveText = node.SourceSpan |> MarkdigExtensions.spanToText document |> trimEndSingle
                     Children = children
                 }
 
