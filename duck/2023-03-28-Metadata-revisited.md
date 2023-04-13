@@ -364,10 +364,14 @@ Q: How do I handle merging vectors, since they are heterogeneous and could conta
 - A: I don't think there's any safe way I can merge them I think I just have to take all the override vector values.
 - IDEA: I could perhaps create an inheritance approach that takes custom merge (and a relatively simple merge builder) if users ever want to customize the merge behavior based on a custom usecase
 
+PROBLEM: I'm realizing with Parent-child inheritance that I want to know the parent, but I have to map all the children before I can complete the parent since the data is immutable. I have to recursively update the children first if they're going to show in the parent
+
 TODO: I could make these properties if I made types for meta with non-matching keys and a way to create two dictionaries with matching keys or guaranteed overlap
  - the overlap could be a param and then I just inject that overlap into both value sets
    - the issue is having different values in target vs overrides
 
+TODO: I'm realizing that with forward inheritance, I really only want to map certain values. 
+- i.e. I want to carry date between blog post notes, but I don't want to carry forward rating
 
 ## Include Tags in Model?
 Q: Should I also model tags as part of the note model?

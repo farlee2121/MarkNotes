@@ -566,6 +566,71 @@ let metadataModelTests = testList "Note Model" [
 
                 expected =! actual
 
+        testCase
+            "should map this parent-child example"
+            <| fun () ->
+                let sectionsText = [
+                    String.joinLines [
+                        "---"
+                        "key: value"
+                        "---"
+                    ]
+                    String.joinLines [
+                        "# Heading"
+                    ]
+                    String.joinLines [
+                        "# Heading"
+                        "```yml"
+                        "hi: 5"
+                        "```"
+                    ]
+                    String.joinLines [
+                        "## Child Heading"
+                        "```yml"
+                        "yes: sir"
+                        "hi: 10"
+                        "```"
+                    ]
+                ]
+                let document = String.joinLines sectionsText
+
+                let getExpected [root; s1; s2; s3] =  {
+                    Level = SectionLevel.Root
+                    Meta = MetadataValue.fromPairs ["key", SingleValue "value"]
+                    ExclusiveText = root
+                    Children = [{
+                        Level = SectionLevel.Heading 1
+                        Meta = MetadataValue.fromPairs [
+                            "key", SingleValue "value"
+                        ]
+                        ExclusiveText = s1
+                        Children = []
+                    };
+                    {
+                        Level = SectionLevel.Heading 1
+                        Meta = MetadataValue.fromPairs [
+                            "key", SingleValue "value"
+                            "hi", SingleValue "5"
+                        ]
+                        ExclusiveText = s2
+                        Children = [{
+                            Level = SectionLevel.Heading 2
+                            Meta = MetadataValue.fromPairs [
+                                "key", SingleValue "value"
+                                "hi", SingleValue "10"
+                                "yes", SingleValue "sir"
+                            ]
+                            ExclusiveText = s3
+                            Children = []
+                        }]
+                    }]
+                }
+                let expected = getExpected sectionsText
+
+                let actual = NoteModel.parse document |> NoteModel.Inheritance.parentChild
+
+                expected =! actual
+
         testList "Meta Merge" [
             testProperty' "SingleValues are replaced by override"
             <| fun (target:MetaSingle, overrides:MetaSingle) ->

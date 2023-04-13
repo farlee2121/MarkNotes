@@ -57,6 +57,7 @@ module Section =
             {mapped with Children = childrenMapped}, state
         recurse state section
 
+
     let fullText (section:Section) = 
         let mapf state (section:Section) = (section, section.ExclusiveText :: state)
         let _,textInReverseOrder = mapFold mapf [] section
@@ -119,6 +120,26 @@ module NoteModel =
             match yamlRoot with
             | Some root -> root |> yamlNodeToMetaModel 
             | None -> MetadataValue.Complex EquatableDictionary.empty
+
+
+    module Inheritance =
+        let forwardInheritance (root:Section) =
+            let mergeMeta prevMeta currentSection =
+                let merged = MetadataValue.merge prevMeta currentSection.Meta
+                { currentSection with Meta = merged}, merged
+
+            let (mapped, _) = Section.mapFold mergeMeta MetadataValue.default' root
+            mapped
+
+        let parentChild (root:Section) =
+            let rec recurse (section:Section) : Section =
+                let mergeMeta child =
+                    let merged = MetadataValue.merge section.Meta child.Meta
+                    { child with Meta = merged }
+                let mappedChildren = section.Children |> List.map (mergeMeta >> recurse)
+                { section with Children = mappedChildren }
+
+            recurse root
 
 
     let parse (document: string) : Section =
