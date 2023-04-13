@@ -289,31 +289,6 @@ Q: What should I collect when crawling for sections?
         - Q: All this tree code is a bit messy and I'll probably need all the methods again for Section. Should i use a shared tree construct?
       - TODO: figure out nicer markdig extension namespacing
 
-Pickup: Get exclusive content working
-- use mapFoldBack?
-- hmm. I'm realizing that exclusive contents are easy to get when I have the heading list. I just iterate backwards. 
-  - The trick is making that available to sections. It'd be easy if I calculated contents before creating the hierarchy
-
-root
-#
-##
-###
-###
-##
-###
-#
-##
-
-###
-###
-#
-
-
-#
-###
-##
-#
-
 
 Q: How do build exclusive content
 - NOTE: the start of a section should always be predictable from the original blog
@@ -322,9 +297,32 @@ Q: How do build exclusive content
 - Trying to pass children and the previous node is proving hard to think about
   - I could separate the two calculations. Do a scan over the blocks to get lengths then zip it with the mapped sections
   - One way or the other i'm going to have to refer to the original document. I can't get full section content off of the headers
+- Q: How do I handle inheritance, since each child will need to know about their parent?
+  - this is opposed to exclusive content where each parent needs to know about the next section below it
+  - Q: would it make sense for me to collect meta blocks beforehand?
+    - Then I can can just fill exclusive meta at the time I map from blocks to sections
+      - I kinda like this. Get the raw Markdig version of all the info I need so then the mapping to the domain model is all at once and the domain model doesn't have and weird incomplete states
+    - exclusive meta would be a good increment toward inherited meta
+    - A: Yes, gather meta before mapping
+  - Inheritance is still tricky. I'll handle it later
+
+- hmm. I'm realizing that exclusive contents are easy to get when I have the heading list. I just iterate backwards. 
+  - The trick is making that available to sections. It'd be easy if I calculated contents before creating the hierarchy
+  - I can always just use a windowing then map the windows a single node if needed. I can even make it lazy if I use Seq
+    - this is more intuitive, but I'm also curious if mapFold can work just for learning sake
+
+Pickup: Figure out newline funk in tests
+- Gather spans and meta blocks before mapping to Sections
+  - For consistency in mapping, probably treat root as a conditional branch of header meta
+
+TODO: Newlines at the end of sections are making testing weird. Should I trim newlines?
+- I wouldn't get the original document if i don't track trivia (i.e. multiple newlines)
+- Q: How could I change my test arrangement or comparison?
 
 Q: How do I generate tree arbs again?
 - FsCheck has some examples
+
+
 
 ## Include Tags in Model?
 Q: Should I also model tags as part of the note model?
@@ -337,3 +335,7 @@ It would be pretty fun to make a visual graph of notes. Even one that updates as
 Might be a good portfolio item. 
 - I could explain notedown in markdown used to generate the graph visualizing notedown
 - maybe even make a logo like the markdown logo, but with an N instead
+- The visual should probably be a tree
+  - it'd be nice if leafs weren't side-by-side but instead were arranged as a list under a node
+  - maybe I should just highlight tags instead of showing them as nodes
+- if time, it'd be cool to include a filter based on section meta in the UI

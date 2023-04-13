@@ -3,7 +3,7 @@ namespace Notedown.Core
 open System.Collections.Generic
 open System
 
-module internal StructuralDictionaryInternal =
+module internal EquatableDictionaryInternal =
     let kvpEqual (left:KeyValuePair<'key,'value>) (right:KeyValuePair<'key,'value>) =
         left.Key = right.Key
         && left.Value = right.Value
@@ -12,7 +12,7 @@ module internal StructuralDictionaryInternal =
         Seq.length left = Seq.length right
         && Seq.forall2 kvpEqual left right
 
-type StructuralDictionary<'key, 'value when 'key:equality and 'value: equality> =
+type EquatableDictionary<'key, 'value when 'key:equality and 'value: equality> =
     inherit Dictionary<'key, 'value>
 
     new (dictionary:IDictionary<'key,'value>) = { inherit Dictionary<'key,'value>(dictionary) }
@@ -28,23 +28,23 @@ type StructuralDictionary<'key, 'value when 'key:equality and 'value: equality> 
 
     override this.Equals(other) =
         match other with
-        | :? StructuralDictionary<'key, 'value> as other -> 
-            StructuralDictionaryInternal.equals this other
+        | :? EquatableDictionary<'key, 'value> as other -> 
+            EquatableDictionaryInternal.equals this other
         | _ -> false
 
     override this.GetHashCode() =
         (this |> Seq.map (fun kvp -> (kvp.Key, kvp.Value))).GetHashCode()        
 
-    interface IEquatable<StructuralDictionary<'key,'value>> with
+    interface IEquatable<EquatableDictionary<'key,'value>> with
         member this.Equals (other) : bool =
-            StructuralDictionaryInternal.equals this other
+            EquatableDictionaryInternal.equals this other
 
 
-module StructuralDictionary =
-    let empty<'key, 'value when 'key:equality and 'value:equality> = new StructuralDictionary<'key, 'value>()
-    let fromDict (dict:IDictionary<'key,'value>) = StructuralDictionary(dict)
+module EquatableDictionary =
+    let empty<'key, 'value when 'key:equality and 'value:equality> = new EquatableDictionary<'key, 'value>()
+    let fromDict (dict:IDictionary<'key,'value>) = EquatableDictionary(dict)
 
 
 [<AutoOpen>]
-module _StructuralDictionaryConstructor =
-    let sdict tupleList = StructuralDictionary(dict tupleList)
+module _EquatableDictionaryConstructor =
+    let sdict tupleList = EquatableDictionary(dict tupleList)

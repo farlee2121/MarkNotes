@@ -9,7 +9,7 @@
   <ItemGroup>
     <Compile Include="UnquoteAliases.fs" />
     <Compile Include="TreeUtilityTests.fs" />
-    <Compile Include="StructuralDictionaryTests.fs" />
+    <Compile Include="EquatableDictionaryTests.fs" />
     <Compile Include="TagExtractionTests.fs" />
     <Compile Include="NoteModelTests.fs" />
     <Compile Include="Program.fs" />

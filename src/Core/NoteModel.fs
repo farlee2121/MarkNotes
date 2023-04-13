@@ -13,10 +13,10 @@ open System.Collections.Generic
 type MetadataValue =
     | SingleValue of string
     | Vector of MetadataValue list
-    | Complex of StructuralDictionary<string, MetadataValue>
+    | Complex of EquatableDictionary<string, MetadataValue>
 
 module MetadataValue =
-    let default' = Complex StructuralDictionary.empty
+    let default' = Complex EquatableDictionary.empty
     let fromPairs t = sdict t |> Complex 
 
 type HeadingLevel = int
@@ -57,7 +57,7 @@ module NoteModel =
                 | :? YamlScalarNode as scalar -> scalar.Value |> MetadataValue.SingleValue
                 | :? YamlSequenceNode as vec -> vec.Children |> Seq.map recurse |> List.ofSeq |> MetadataValue.Vector
                 | :? YamlMappingNode as map ->
-                    map.Children |> Seq.map (mapKvp extractMapKey recurse) |> StructuralDictionary |> MetadataValue.Complex 
+                    map.Children |> Seq.map (mapKvp extractMapKey recurse) |> EquatableDictionary |> MetadataValue.Complex 
                 | node -> MetadataValue.SingleValue $"Unsupported yaml: {node |> nodeToText}"
 
             recurse node
@@ -77,7 +77,7 @@ module NoteModel =
 
             match yamlRoot with
             | Some root -> root |> yamlNodeToMetaModel 
-            | None -> MetadataValue.Complex StructuralDictionary.empty
+            | None -> MetadataValue.Complex EquatableDictionary.empty
 
 
     let parse (document: string) : Section =
@@ -105,14 +105,14 @@ module NoteModel =
                         | 0 -> SectionLevel.Root
                         | n -> SectionLevel.Heading n
                     Meta = MetadataValue.default'
-                    ExclusiveText = node.Heading |> Option.map MarkdigExtensions.blockToMarkdownText |> Option.defaultValue ""
+                    ExclusiveText = node.SourceSpan |> MarkdigExtensions.spanToText document
                     Children = children
                 }
 
 
             let headingHierarchy =
                 markdownModel
-                |> MarkdigExtensions.parseHeaderHierarchy
+                |> MarkdigExtensions.extractSectionHierarchy
             let sections =
                 headingHierarchy
                 |> MarkdigExtensions.HeadingHierarchy.cata mapSection
@@ -154,7 +154,7 @@ module NoteModel =
                     let rootMeta =
                         match yamlBlock with
                         | Some ymlBlock -> ymlBlock |> MarkdigExtensions.blockToMarkdownText |> Yaml.parseYaml
-                        | None -> MetadataValue.Complex StructuralDictionary.empty
+                        | None -> MetadataValue.Complex EquatableDictionary.empty
 
                     {
                         Level = SectionLevel.Root

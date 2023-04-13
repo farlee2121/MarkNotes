@@ -12,6 +12,7 @@ type HeadingHierarchy =
     {
         Heading: HeadingBlock option
         Children: HeadingHierarchy list
+        SourceSpan: SourceSpan
     }
 with
     member this.Level =
@@ -31,6 +32,7 @@ module HeadingHierarchy =
     let ofHeading block = {
         Heading = Some block
         Children = []
+        SourceSpan = block.Span
     }
 
     let cata f root =
@@ -72,9 +74,30 @@ let blockToMarkdownText (markdownNode:MarkdownObject) =
     renderer.Write(markdownNode)
     sw.ToString()
 
-let parseHeaderHierarchy (markdownModel: MarkdownDocument) =
-    let headings = markdownModel |> Seq.choose tryUnbox<HeadingBlock> |> Seq.map HeadingHierarchy.ofHeading
-    let root = { Heading = None; Children = []}
+let setSectionSpan (section: HeadingHierarchy) nextSectionStart =
+    ({ section with SourceSpan = SourceSpan(section.SourceSpan.Start, nextSectionStart-1)}, section.SourceSpan.Start)
+
+let getRootSpan (documentSpan:SourceSpan) (headings: HeadingHierarchy seq) =
+    let rootEnd =
+        headings
+        |> Seq.tryHead
+        |> Option.map (fun h -> h.SourceSpan.Start - 1)
+        |> Option.defaultValue documentSpan.End
+    SourceSpan(0, rootEnd)
+
+let extractSectionHierarchy (markdownModel: MarkdownDocument) =
+    let (headings, _) =
+        markdownModel
+        |> Seq.choose tryUnbox<HeadingBlock>
+        |> Seq.map HeadingHierarchy.ofHeading
+        |> (fun l -> Seq.mapFoldBack setSectionSpan l (markdownModel.Span.End + 1))
+
+
+    let root = {
+        Heading = None;
+        SourceSpan = getRootSpan markdownModel.Span headings
+        Children = [];
+    }
     let stack = Stack([root])
 
     let collectChildren (prev:HeadingHierarchy) =

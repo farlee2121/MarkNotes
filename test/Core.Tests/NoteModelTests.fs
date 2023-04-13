@@ -14,6 +14,8 @@ type DictLikeness<'key,'value> = ('key * 'value) list
 module DictLikeness = 
     let fromDict (dictionary: Dictionary<'key,'value>) = [for kvp in dictionary -> (kvp.Key, kvp.Value)]
 
+module List =
+    let inline tailBack list = list |> List.take ((List.length list) - 1)
 
 
 type NoHeadingsString = NoHeadingsString of string
@@ -33,6 +35,29 @@ type FsCheckExtensions () =
         
 let testProperty' name test = 
     testPropertyWithConfig { FsCheckConfig.defaultConfig with arbitrary = [typeof<FsCheckExtensions>] } name test
+
+
+let titleToHeadingLevel str =
+    let poundCount = str |> Seq.where (fun c -> c = '#') |> Seq.length
+    match poundCount with
+    | 0 -> SectionLevel.Root
+    | n -> SectionLevel.Heading n
+
+let sectionFromTitle title children =
+    {
+        Level = titleToHeadingLevel title
+        ExclusiveText = $"{title}"
+        Meta = MetadataValue.default'
+        Children = children
+    }
+
+let sectionFromInnerTitle title children = sectionFromTitle $"{title}\n" children
+
+
+let trimLast list =
+    let lastIndex = (List.length list) - 1
+    let lastSection : Section = List.last list
+    list |> List.updateAt lastIndex { lastSection with ExclusiveText = lastSection.ExclusiveText.TrimEnd()}
 
 [<Tests>]
 let metadataModelTests = testList "Note Model" [
@@ -263,20 +288,8 @@ let metadataModelTests = testList "Note Model" [
 
             expected =! actual
 
-    testList "parse Heading Hierarchy" [
-        let titleToHeadingLevel str =
-            let poundCount = str |> Seq.where (fun c -> c = '#') |> Seq.length
-            match poundCount with
-            | 0 -> SectionLevel.Root
-            | n -> SectionLevel.Heading n
-
-        let sectionFromTitle title children =
-            {
-                Level = titleToHeadingLevel title
-                ExclusiveText = $"{title}\n"
-                Meta = MetadataValue.default'
-                Children = children
-            }
+    testList "should parse heading hierarchy" [
+        
 
         testCase
             "should parse increasing header levels as siblings of the root document"
@@ -289,14 +302,14 @@ let metadataModelTests = testList "Note Model" [
                 ]
                 let document = String.joinLines lines  + "\n" 
 
-                let sectionFromTitle' title = sectionFromTitle title []
+                let sectionFromTitle' title = sectionFromInnerTitle title []
             
                 let expected = {
                     Level = SectionLevel.Root
                     Meta = MetadataValue.default'
                     ExclusiveText = ""
                     Children = 
-                        lines |> List.map sectionFromTitle'
+                        lines |> List.map sectionFromTitle' |> trimLast
                 }
 
                 let actual = NoteModel.parse document
@@ -314,7 +327,7 @@ let metadataModelTests = testList "Note Model" [
                 ]
                 let document = String.joinLines lines  + "\n" 
 
-                let sectionFromTitle' title = sectionFromTitle title []
+                let sectionFromTitle' title = sectionFromInnerTitle title []
             
                 let expected = {
                     Level = SectionLevel.Root
@@ -322,7 +335,7 @@ let metadataModelTests = testList "Note Model" [
                     ExclusiveText = ""
                     Children =
                        [
-                        sectionFromTitle "# Parent" (lines |> List.skip 1 |> List.map sectionFromTitle')
+                        sectionFromInnerTitle "# Parent" (lines |> List.skip 1 |> List.map sectionFromTitle' |> trimLast)
                        ]
                 }
 
@@ -341,14 +354,14 @@ let metadataModelTests = testList "Note Model" [
                 ]
                 let document = String.joinLines lines  + "\n" 
 
-                let sectionFromTitle' title children = [sectionFromTitle title children]
+                let sectionFromTitle' title children = [sectionFromInnerTitle title children]
 
                 let expected = {
                     Level = SectionLevel.Root
                     Meta = MetadataValue.default'
                     ExclusiveText = ""
                     Children = 
-                         List.foldBack sectionFromTitle' lines []
+                         List.foldBack sectionFromTitle' (lines |> List.tailBack) [sectionFromTitle (lines |> List.last) []] 
                 }
 
                 let actual = NoteModel.parse document
@@ -373,13 +386,13 @@ let metadataModelTests = testList "Note Model" [
                     Meta = MetadataValue.default'
                     ExclusiveText = ""
                     Children = [
-                        sectionFromTitle "# Title" [
-                            sectionFromTitle "## H2" []
-                            sectionFromTitle "## H2 Again" [
-                                sectionFromTitle "### H3" []
+                        sectionFromInnerTitle "# Title" [
+                            sectionFromInnerTitle "## H2" []
+                            sectionFromInnerTitle "## H2 Again" [
+                                sectionFromInnerTitle "### H3" []
                             ]
                         ]
-                        sectionFromTitle "# Title 2" [
+                        sectionFromInnerTitle "# Title 2" [
                             sectionFromTitle "## Sub of 2" []
                         ]
                     ]
@@ -388,11 +401,50 @@ let metadataModelTests = testList "Note Model" [
                 let actual = NoteModel.parse document
 
                 expected =! actual
+    ]
 
+    testList "should keep section content exclusive" [
+        testCase
+            "should keep conten exclusive for sibling sections"
+            <| fun () ->
+                let sectionsText = [
+                    String.joinLines [
+                        "## H2"
+                        "I am contents"
+                        "> I am also contents"
+                    ]
+                    String.joinLines [
+                        "## H2 2"
+                        "- I am contents"
+                        "- _I am also contents"
+                    ]
+                    String.joinLines [
+                        "## H2 3"
+                        "- I am contents"
+                        "- _I am also contents"
+                    ]
+                ]
+                let document = String.joinLines sectionsText
+
+                let sectionFromText text = sectionFromInnerTitle text []
+
+                let expected = {
+                    Level = SectionLevel.Root
+                    Meta = MetadataValue.default'
+                    ExclusiveText = ""
+                    Children = sectionsText |> List.map sectionFromText |> trimLast
+                }
+
+                let actual = NoteModel.parse document
+
+                expected =! actual
+    // - for sibling sections
+    // - for parent and child
+    // - root level content
+    // - propterty: section content shouldn't overlap and should sum to the original document
     ]
     
 
-    // section content shouldn't overlap and should sum to the original document
     // not sure what's next. I think going straight to meta inheritance should be fine
 ]
 
@@ -407,4 +459,6 @@ let metadataModelTests = testList "Note Model" [
 // - full text of root document equals original document
 // - full content of a sub-section includes child content but is not the full document (maybe start with section text and add text around it so I can easily know what the original full content should be)
 // - don't forget inheritance of meta
+//   - future: inheritance of meta not just from parents but by position (i.e. my blog notes where I only specify the date for the first post I read that day)
+// - a codeblock that follows heading, but with newlines between probably shouldn't be meta
  
