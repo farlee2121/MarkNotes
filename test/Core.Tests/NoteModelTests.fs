@@ -608,6 +608,15 @@ let metadataModelTests = testList "Note Model" [
 
                 expected =! actual
 
+            testCase "New keys in override are added"
+            <| fun () ->
+                let targetPairs = ["hi", SingleValue "5"]
+                let overridePairs = ["key", SingleValue "value"]
+
+                let expected = MetadataValue.fromPairs (List.concat [targetPairs; overridePairs])
+                let actual = MetadataValue.merge (MetadataValue.fromPairs targetPairs) (MetadataValue.fromPairs overridePairs)
+
+                expected =! actual
         ]
     ]
 ]
