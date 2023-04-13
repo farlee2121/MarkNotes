@@ -617,6 +617,51 @@ let metadataModelTests = testList "Note Model" [
                 let actual = MetadataValue.merge (MetadataValue.fromPairs targetPairs) (MetadataValue.fromPairs overridePairs)
 
                 expected =! actual
+
+            testCase "Matching keys are overridden"
+            <| fun () ->
+                let target = MetadataValue.fromPairs ["hi", SingleValue "5"]
+                let overrides = MetadataValue.fromPairs ["hi", SingleValue "10"]
+
+                let expected = overrides
+                let actual = MetadataValue.merge target overrides
+
+                expected =! actual
+
+            testCase "Nested complex meta is merged recursively"
+            <| fun () ->
+                let target = MetadataValue.fromPairs [
+                    "hi", MetadataValue.fromPairs [
+                        "mid", SingleValue "Range"
+                        "key", MetadataValue.fromPairs [
+                            "inner", SingleValue "value"
+                            "other", SingleValue "value"
+                        ]
+                    ]
+                ]
+                let overrides = MetadataValue.fromPairs [
+                    "hi", MetadataValue.fromPairs [
+                        "mid", SingleValue "day"
+                        "key", MetadataValue.fromPairs [
+                            "inner", SingleValue "peace"
+                            "notin", SingleValue "target"
+                        ]
+                    ]
+                ]
+
+                let expected = MetadataValue.fromPairs [
+                    "hi", MetadataValue.fromPairs [
+                        "mid", SingleValue "day"
+                        "key", MetadataValue.fromPairs [
+                            "inner", SingleValue "peace"
+                            "other", SingleValue "value"
+                            "notin", SingleValue "target"
+                        ]
+                    ]
+                ]
+                let actual = MetadataValue.merge target overrides
+
+                expected =! actual
         ]
     ]
 ]

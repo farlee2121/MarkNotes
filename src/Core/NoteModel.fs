@@ -21,12 +21,20 @@ module MetadataValue =
     let fromPairs t = sdict t |> Complex
 
     let merge (target:MetadataValue) (overrides:MetadataValue) =
+        let rec recurse (target:MetadataValue) overrides =
+            match (target, overrides) with
+            | (Complex t, Complex o) ->
+                let merged = EquatableDictionary(t)
+                for key in o.Keys do
+                    if(merged.ContainsKey(key))
+                    then merged[key] <- recurse t[key] o[key] 
+                    else merged[key] <- o[key]
+                    
+                Complex merged
+            | (Vector t, Vector o) -> Vector o
+            | (_, over) -> over
 
-        match (target, overrides) with
-        | (Complex t, Complex o) ->
-            (Seq.append t o) |> EquatableDictionary |> Complex
-        | (Vector t, Vector o) -> Vector o
-        | (_, over) -> over
+        recurse target overrides
 
 type HeadingLevel = int
 type SectionLevel = 
