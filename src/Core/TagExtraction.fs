@@ -2,6 +2,7 @@ namespace Notedown.Core
 module TagExtraction =
     open Markdig
     open Markdig.Syntax
+    open Notedown.BCLExtensions
 
     
     let private computeContainingSpan (blocks: MarkdownObject seq) =

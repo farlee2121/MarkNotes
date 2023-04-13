@@ -3,6 +3,7 @@ open System.CommandLine
 open System.IO
 open System
 open Notedown.Core
+open Notedown.BCLExtensions
 open System.CommandLine.Invocation
 open System.CommandLine.PropertyMapBinder
 open Microsoft.Extensions.FileSystemGlobbing

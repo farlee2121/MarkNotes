@@ -7,6 +7,7 @@ open System.IO
 open System
 open YamlDotNet.Serialization
 open System.Collections.Generic
+open Notedown.BCLExtensions
 
 type MetadataValue =
     | SingleValue of string

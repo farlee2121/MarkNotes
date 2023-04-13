@@ -3,6 +3,7 @@ module MetadataModelTests
 open System
 open Expecto
 open Notedown.Core
+open Notedown.BCLExtensions
 open UnquoteAliases
 open Swensen.Unquote.Assertions
 open System.Collections.Generic
@@ -13,9 +14,6 @@ type DictLikeness<'key,'value> = ('key * 'value) list
 
 module DictLikeness = 
     let fromDict (dictionary: Dictionary<'key,'value>) = [for kvp in dictionary -> (kvp.Key, kvp.Value)]
-
-module List =
-    let inline tailBack list = list |> List.take ((List.length list) - 1)
 
 
 type NoHeadingsString = NoHeadingsString of string

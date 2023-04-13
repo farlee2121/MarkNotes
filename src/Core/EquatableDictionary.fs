@@ -1,4 +1,4 @@
-namespace Notedown.Core
+namespace Notedown.BCLExtensions
 
 open System.Collections.Generic
 open System
