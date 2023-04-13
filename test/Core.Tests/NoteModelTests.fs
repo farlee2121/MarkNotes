@@ -46,13 +46,10 @@ let titleToHeadingLevel str =
 let sectionFromTitle title children =
     {
         Level = titleToHeadingLevel title
-        ExclusiveText = $"{title}"
+        ExclusiveText = title
         Meta = MetadataValue.default'
         Children = children
     }
-
-let sectionFromInnerTitle title children = sectionFromTitle $"{title}\n" children
-
 
 let trimLast list =
     let lastIndex = (List.length list) - 1
@@ -438,6 +435,42 @@ let metadataModelTests = testList "Note Model" [
                 let actual = NoteModel.parse document
 
                 expected =! actual
+                document =! Section.fullText actual
+
+        testCase
+            "should keep content exclusive between parent and child"
+            <| fun () ->
+                let sectionsText = [
+                    String.joinLines [
+                        "# H1"
+                        "I am contents"
+                        "> I am also contents"
+                    ]
+                    String.joinLines [
+                        "## H2"
+                        "- I am contents"
+                        "- _I am also contents_"
+                    ]
+                    String.joinLines [
+                        "### H3"
+                        "- I am final content"
+                    ]
+                ]
+                let document = String.joinLines sectionsText
+
+                let sectionFromText text children = [sectionFromTitle text children]
+
+                let expected = {
+                    Level = SectionLevel.Root
+                    Meta = MetadataValue.default'
+                    ExclusiveText = ""
+                    Children = List.foldBack sectionFromText sectionsText []
+                }
+
+                let actual = NoteModel.parse document
+
+                expected =! actual
+                document =! Section.fullText actual
 
                 // PICKUP: Write more exclusive content tests. Then work on section meta. (don't forget full document reconstruction test)
     // - for parent and child

@@ -31,6 +31,30 @@ type Section = {
     Children: Section list
 }
 
+module Section =
+    /// Forward traverse section with a tracked state. Can modify sections while preserving structure/hierarchy
+    let mapFold (mapf: 'state -> Section -> (Section*'state)) (state: 'state) (section: Section) : (Section *'state) =
+        let rec recurse state section =
+            let mapped, state = mapf state section 
+            let childrenMapped, state = List.mapFold recurse state mapped.Children
+            {mapped with Children = childrenMapped}, state
+        recurse state section
+
+    let fullText (section:Section) = 
+        let mapf state (section:Section) = (section, section.ExclusiveText :: state)
+        let _,textInReverseOrder = mapFold mapf [] section
+
+        let textInOrder = textInReverseOrder |> List.rev
+
+        let trimRootIfEmpty sectionTexts =
+            // if the root document is empty it causes an extra newline when joined
+            // so remove it
+            match sectionTexts with
+            | "" :: tail -> tail
+            | l -> l
+
+        textInOrder |> trimRootIfEmpty |> String.joinLines
+ 
 type Section with
     member this.Text() =
         this.ExclusiveText

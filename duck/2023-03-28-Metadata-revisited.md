@@ -319,6 +319,15 @@ PROBLEM: Newlines at the end of sections are making testing weird. Should I trim
 - OPT: Maybe I trim exactly one trailing newline. Additional whitespace is still part of the section and the sections are reconstructed by joining with newlines
   - This actually seems pretty intuitive. I generally wouldn't expect the whitespace if I see the sections as have no lines between each other 
 
+
+Q: There can be multiple inheritance schemes. How do I want to handle that?
+- Inheritance schemes include parent-child, forward, back, none, parent-chiled + forward/back
+- OPT: I could set up sections with Exclusive and total meta, then I can apply inheritance rules as extra transforms
+  - probably create an underlying mapFold method (so I can have both state and a transform without changing structure)
+    - users could use this to apply document-level/universal meta
+- OPT: I could pass configuration into the parser with an enum option for inheritance type
+  - This would probably just use the transforms internally, but it might be more intuitive to users
+
 Pickup: 
 - Gather spans and meta blocks before mapping to Sections
   - For consistency in mapping, probably treat root as a conditional branch of header meta
@@ -344,3 +353,9 @@ Might be a good portfolio item.
   - it'd be nice if leafs weren't side-by-side but instead were arranged as a list under a node
   - maybe I should just highlight tags instead of showing them as nodes
 - if time, it'd be cool to include a filter based on section meta in the UI
+
+
+FUTURE: Parse tag hierarchies
+- e.g. if we want to see the hierarchy of questions and answers to demonstrate the train of thought
+- e.g. see pros and cons listed directly under questions
+- It's probably about as fast and much easier if we just parse all tags and then filter the hierarchy if we're only interested in certain tag types or relationships
