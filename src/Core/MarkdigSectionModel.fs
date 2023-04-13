@@ -92,6 +92,7 @@ module MarkdigSectionModel =
             |> Option.defaultValue documentSpan.End
         SourceSpan(0, rootEnd)
 
+
     let extractSectionHierarchy (markdownModel: MarkdownDocument) =
         let setSectionSpan (section: HeadingHierarchy) nextSectionStart =
             ({ section with SourceSpan = SourceSpan(section.SourceSpan.Start, nextSectionStart-1)}, section.SourceSpan.Start)

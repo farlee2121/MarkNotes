@@ -338,14 +338,31 @@ Property tests waiting on expecto.FsCheck
 - round trip meta data
 - round trip hierarchy (can probably be same test as sections always sum to full document)
 
-Q: would the inheritance test be cleaner if I created meta hierarchies and converted them to yaml?
-- It would probably reduce hand-coded expectations
-
-TODO: the MarkDig extensions has grown into something else I should move out the heading hierarchy code and also find a better name for it
+Other pending tests
+- [ ] full content of a sub-section includes child content but is not the full document (maybe start with section text and add text around it so I can easily know what the original full content should be)
 
 Q: How do I generate tree arbs again?
 - FsCheck has some examples
 
+
+## Inheritance rules
+
+
+- [ ] inheritance of meta not just from parents but by position (i.e. my blog notes where I only specify the date for the first post I read that day) 
+- [ ] vectors values are fully clobbered by child config value
+- [ ] complex meta
+  - [ ] keys in parent but not in child are added to child
+  - [ ] keys in child and not in parent are preserved
+  - [ ] keys in both merge recursively
+
+NOTE: all the meta suites expect the same general merge strategies. The only difference is that defining who inherits from who
+
+Q: would the inheritance test be cleaner if I created meta hierarchies and converted them to yaml?
+- It would probably reduce hand-coded expectations
+
+Q: How do I handle merging vectors, since they are heterogeneous and could contain complex values?
+- A: I don't think there's any safe way I can merge them I think I just have to take all the override vector values.
+- IDEA: I could perhaps create an inheritance approach that takes custom merge (and a relatively simple merge builder) if users ever want to customize the merge behavior based on a custom usecase
 
 
 ## Include Tags in Model?

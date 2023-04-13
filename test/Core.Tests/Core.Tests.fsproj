@@ -8,6 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="UnquoteAliases.fs" />
+    <Compile Include="ExpectoExtensions.fs" />
     <Compile Include="TreeUtilityTests.fs" />
     <Compile Include="EquatableDictionaryTests.fs" />
     <Compile Include="TagExtractionTests.fs" />

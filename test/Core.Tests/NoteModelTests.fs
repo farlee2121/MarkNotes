@@ -8,6 +8,7 @@ open UnquoteAliases
 open Swensen.Unquote.Assertions
 open System.Collections.Generic
 open FsCheck
+open ExpectoExtensions
 
 
 type DictLikeness<'key,'value> = ('key * 'value) list
@@ -20,6 +21,10 @@ type NoHeadingsString = NoHeadingsString of string
 with
     member this.Get = match this with NoHeadingsString s -> s
 
+type MetaSingle = private MetaSingle of MetadataValue
+with
+    member this.Get = match this with MetaSingle s -> s
+
 type FsCheckExtensions () =
     let regexGen pattern = gen {
             let xeger = Fare.Xeger pattern
@@ -30,6 +35,11 @@ type FsCheckExtensions () =
             let xeger = Fare.Xeger "[^#]"
             return xeger.Generate() 
         } |> Arb.fromGen
+
+    static member MetaSingle() =
+        Arb.generate<string>
+        |> Gen.map MetadataValue.SingleValue
+        |> Arb.fromGen
         
 let testProperty' name test = 
     testPropertyWithConfig { FsCheckConfig.defaultConfig with arbitrary = [typeof<FsCheckExtensions>] } name test
@@ -196,7 +206,7 @@ let metadataModelTests = testList "Note Model" [
                 expected =! actual
 
         testCase
-            "should parse headings without a codeblock as sections with no meta (other than what's inherited)"
+            "should parse headings without a codeblock as sections with no meta"
             <| fun () ->
                 // TODO: maybe remake this as a property. Probably need to register a custom Arb
                 let document =
@@ -555,20 +565,49 @@ let metadataModelTests = testList "Note Model" [
                 let actual = NoteModel.parse document
 
                 expected =! actual
+
+        testList "Meta Merge" [
+            testProperty' "SingleValues are replaced by override"
+            <| fun (target:MetaSingle, overrides:MetaSingle) ->
+                let expected = overrides.Get
+                let actual = MetadataValue.merge target.Get overrides.Get
+
+                expected =! actual
+
+            testProperty' "Vectors are replaced by override"
+            <| fun (targetList:MetadataValue list, overList: MetadataValue list) ->
+                let target = MetadataValue.Vector targetList
+                let overrides = MetadataValue.Vector overList
+
+                let expected = overrides
+                let actual = MetadataValue.merge target overrides
+
+                expected =! actual
+
+            testCase "Vectors are replaced by override, no recursion for complex values"
+            <| fun () ->
+                let target = MetadataValue.Vector [ MetadataValue.fromPairs ["key", SingleValue "value"; "hi", SingleValue "5"] ]
+                let overrides = MetadataValue.Vector [ MetadataValue.fromPairs ["other", SingleValue "key"; "hi", SingleValue "10"] ]
+
+                let expected = overrides
+                let actual = MetadataValue.merge target overrides
+
+                expected =! actual
+
+            theory "Mismatched value kinds take override value" [
+                SingleValue "5", Vector []
+                SingleValue "5", Complex (sdict [])
+                Vector [], SingleValue "5"
+                Vector [], Complex (sdict [])
+                Complex (sdict []), SingleValue "5"
+                Complex (sdict []), Vector []
+            ]
+            <| fun (target, overrides) ->
+                let expected = overrides
+                let actual = MetadataValue.merge target overrides
+
+                expected =! actual
+
+        ]
     ]
 ]
-
-
-
-// Tests:
-// - can take any meta section and round trip it?
-// - doc with sections that have meta but no root meta
-// - empty doc has no child sections
-// - somehow test section nesting. might just be one property but some concrete tests would probably be good
-//   - I can't blindly generate nested sections. The sections will have to obey section level hierarchy 
-// - full text of root document equals original document
-// - full content of a sub-section includes child content but is not the full document (maybe start with section text and add text around it so I can easily know what the original full content should be)
-// - don't forget inheritance of meta
-//   - future: inheritance of meta not just from parents but by position (i.e. my blog notes where I only specify the date for the first post I read that day)
-// - a codeblock that follows heading, but with newlines between probably shouldn't be meta
- 

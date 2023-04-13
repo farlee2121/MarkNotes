@@ -43,6 +43,8 @@ type EquatableDictionary<'key, 'value when 'key:equality and 'value: equality> =
 module EquatableDictionary =
     let empty<'key, 'value when 'key:equality and 'value:equality> = new EquatableDictionary<'key, 'value>()
     let fromDict (dict:IDictionary<'key,'value>) = EquatableDictionary(dict)
+    let toPairs (d:EquatableDictionary<'key,'value>) = [for kvp in d -> (kvp.Key, kvp.Value)]
+    let fromPairs tupleList = EquatableDictionary(dict tupleList)
 
 
 [<AutoOpen>]
