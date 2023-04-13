@@ -77,7 +77,7 @@ let metadataModelTests = testList "Note Model" [
         testProperty'
             "should return a empty meta but all contents when given a document with no frontmatter"
             <| fun (document: NoHeadingsString) ->
-                string
+            document.Get |> (not << String.IsNullOrWhiteSpace)  ==> lazy (
                 let expected = {
                     Level = SectionLevel.Root
                     Meta = MetadataValue.default'
@@ -88,7 +88,7 @@ let metadataModelTests = testList "Note Model" [
                 let actual = NoteModel.parse document.Get
 
                 expected =! actual
-                document.Get =! actual.Text() 
+                document.Get =! actual.FullText())
 
         testCase
             "should parse simple key-value meta"
@@ -99,7 +99,7 @@ let metadataModelTests = testList "Note Model" [
                     $"\
                     ---\n\
                       {expectedKey}: {expectedValue}\n\
-                    ---\n\
+                    ---\
                     "
 
                 let expected = {
@@ -120,7 +120,7 @@ let metadataModelTests = testList "Note Model" [
                     "\
                     ---\n\
                       author: [Spencer, David, Joe]\n\
-                    ---\n\
+                    ---\
                     "
 
                 let expected = {
@@ -141,7 +141,7 @@ let metadataModelTests = testList "Note Model" [
                     "\
                     ---\n\
                       author: [Spencer, [David], {hi: 5}]\n\
-                    ---\n\
+                    ---\
                     "
 
                 let expected = {
@@ -175,7 +175,7 @@ let metadataModelTests = testList "Note Model" [
                       config: \n  \
                         foo: 5\n  \
                         bar: {baz: 8}\n\
-                    ---\n\
+                    ---\
                     "
 
                 let expected = {
@@ -288,8 +288,7 @@ let metadataModelTests = testList "Note Model" [
 
     ]
 
-    testList "should parse heading hierarchy" [
-        
+    testList "Children" [       
 
         testCase
             "should parse increasing header levels as siblings of the root document"
@@ -512,7 +511,52 @@ let metadataModelTests = testList "Note Model" [
     ]
 
     testList "Meta Inheritance" [
+        testCase
+            "should apply no inheritance by default"
+            <| fun () ->
+                let sectionsText = [
+                    String.joinLines [
+                        "---"
+                        "key: value"
+                        "---"
+                    ]
+                    String.joinLines [
+                        "# Heading"
+                        "```yml"
+                        "hi: 5"
+                        "```"
+                    ]
+                    String.joinLines [
+                        "## Child Heading"
+                        "```yml"
+                        "yes: sir"
+                        "```"
+                    ]
+                ]
+                let document = String.joinLines sectionsText
 
+
+                let getExpected [root; s1; s2] =  {
+                    Level = SectionLevel.Root
+                    Meta = MetadataValue.fromPairs ["key", SingleValue "value"]
+                    ExclusiveText = root
+                    Children = [{
+                        Level = SectionLevel.Heading 1
+                        Meta = MetadataValue.fromPairs ["hi", SingleValue "5"]
+                        ExclusiveText = s1
+                        Children = [{
+                            Level = SectionLevel.Heading 2
+                            Meta = MetadataValue.fromPairs ["yes", SingleValue "sir"]
+                            ExclusiveText = s2
+                            Children = []
+                        }]
+                    }]
+                }
+                let expected = getExpected sectionsText
+
+                let actual = NoteModel.parse document
+
+                expected =! actual
     ]
 ]
 

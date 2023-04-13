@@ -2,17 +2,37 @@ module internal MarkdigExtensions
 
 open Markdig.Syntax
 open System.Collections.Generic
+open Markdig.Extensions.Yaml
 
+
+let spanToText (source: string) (span:SourceSpan) =
+    source.Substring (span.Start, span.Length)
+
+let blockToMarkdownText (markdownNode:MarkdownObject) =
+    let sw = new System.IO.StringWriter()
+    let renderer = new Markdig.Renderers.Roundtrip.RoundtripRenderer(sw)
+    renderer.Write(markdownNode)
+    sw.ToString()
 
 type Stack<'T> with
     member this.Any() = Seq.length this <> 0
 
+type MetaBlock =
+    | FrontMatter of YamlFrontMatterBlock
+    | FencedCode of FencedCodeBlock
+
+module MetaBlock =
+    let toYamlText metaBlock =
+        match metaBlock with
+        | FrontMatter frontmatter -> frontmatter |> blockToMarkdownText
+        | FencedCode fenced -> fenced.Lines |> string
 
 type HeadingHierarchy =
     {
         Heading: HeadingBlock option
         Children: HeadingHierarchy list
         SourceSpan: SourceSpan
+        MetaBlock: MetaBlock option
     }
 with
     member this.Level =
@@ -33,6 +53,7 @@ module HeadingHierarchy =
         Heading = Some block
         Children = []
         SourceSpan = block.Span
+        MetaBlock = None
     }
 
     let cata f root =
@@ -55,27 +76,23 @@ module HeadingHierarchy =
             (f node states.Head) :: states
 
         recurse root state
-    //let mapWithPrev fMap fPrev prev root =
-    //    let rec recurse (node:HeadingHierarchy) prev =
-    //        let (prev, mapped) = List.foldBack recurse node.Children prev
-            
-    //        (fPrev node, fMap node mapped prev)
-
-    //    recurse root prev
 
 
+let tryFindMetaBlock (document:MarkdownDocument) (section: HeadingHierarchy) =
+    let tryGetHeadingMeta (heading: HeadingBlock) =
+        let tryYamlBlock (codeBlock:FencedCodeBlock) =
+            let allowedIdentifiers = set ["yml"; "yaml"]
+            if(allowedIdentifiers.Contains(codeBlock.Info))
+            then
+                Some codeBlock
+            else None
 
-let spanToText (source: string) (span:SourceSpan) =
-    source.Substring (span.Start, span.Length)
+        let maybeNextBlock = document.FindClosestBlock(heading.Line + 1)
+        let maybeCodeBlock = maybeNextBlock |> tryUnbox<FencedCodeBlock>
+        maybeCodeBlock |> Option.bind tryYamlBlock
+        
+    section.Heading |> Option.bind tryGetHeadingMeta
 
-let blockToMarkdownText (markdownNode:MarkdownObject) =
-    let sw = new System.IO.StringWriter()
-    let renderer = new Markdig.Renderers.Roundtrip.RoundtripRenderer(sw)
-    renderer.Write(markdownNode)
-    sw.ToString()
-
-let setSectionSpan (section: HeadingHierarchy) nextSectionStart =
-    ({ section with SourceSpan = SourceSpan(section.SourceSpan.Start, nextSectionStart-1)}, section.SourceSpan.Start)
 
 let getRootSpan (documentSpan:SourceSpan) (headings: HeadingHierarchy seq) =
     let rootEnd =
@@ -86,17 +103,24 @@ let getRootSpan (documentSpan:SourceSpan) (headings: HeadingHierarchy seq) =
     SourceSpan(0, rootEnd)
 
 let extractSectionHierarchy (markdownModel: MarkdownDocument) =
+    let setSectionSpan (section: HeadingHierarchy) nextSectionStart =
+        ({ section with SourceSpan = SourceSpan(section.SourceSpan.Start, nextSectionStart-1)}, section.SourceSpan.Start)
+    let tryIncludeMetaBlock section =
+        {section with MetaBlock = tryFindMetaBlock markdownModel section |> Option.map MetaBlock.FencedCode}
+
     let (headings, _) =
         markdownModel
         |> Seq.choose tryUnbox<HeadingBlock>
         |> Seq.map HeadingHierarchy.ofHeading
+        |> Seq.map tryIncludeMetaBlock
         |> (fun l -> Seq.mapFoldBack setSectionSpan l (markdownModel.Span.End + 1))
 
 
     let root = {
-        Heading = None;
+        Heading = None
         SourceSpan = getRootSpan markdownModel.Span headings
-        Children = [];
+        Children = []
+        MetaBlock = markdownModel.FindBlockAtPosition(1) |> tryUnbox<YamlFrontMatterBlock> |> Option.map MetaBlock.FrontMatter
     }
     let stack = Stack([root])
 
@@ -121,10 +145,3 @@ let extractSectionHierarchy (markdownModel: MarkdownDocument) =
         collectChildren (stack.Peek())
 
     stack.Pop()
-
-// Test cases
-// all descending items
-// starts with headers that will be siblings
-// - all ascending levels
-// - all same levels
-// should really probably have a bunch of tests here

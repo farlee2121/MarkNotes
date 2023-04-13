@@ -1,9 +1,7 @@
 namespace Notedown.Core
 
-open YamlDotNet
-open Markdig.Extensions.Yaml
+
 open Markdig
-open Markdig.Syntax
 open YamlDotNet.RepresentationModel
 open System.IO
 open System
@@ -56,8 +54,8 @@ module Section =
         textInOrder |> trimRootIfEmpty |> String.joinLines
  
 type Section with
-    member this.Text() =
-        this.ExclusiveText
+    member this.FullText() =
+        Section.fullText this
 
 
 module NoteModel =
@@ -105,6 +103,12 @@ module NoteModel =
 
 
     let parse (document: string) : Section =
+
+        let trimEndSingle (s:string) = 
+                if s.EndsWith("\n")
+                then s.Substring(0, s.Length-1)
+                else s
+
         if (String.IsNullOrEmpty document) then
             {
                 Level = SectionLevel.Root
@@ -115,25 +119,17 @@ module NoteModel =
         else
 
             let pipeline = MarkdownPipelineBuilder().UseAdvancedExtensions().UseYamlFrontMatter().EnableTrackTrivia().Build()
-            let markdownModel = Markdown.Parse(document, pipeline)
-
-            let yamlBlock = markdownModel |> Seq.tryPick tryUnbox<YamlFrontMatterBlock>
-
-            let maybeHeading = markdownModel |> Seq.tryPick tryUnbox<HeadingBlock>
-            let maybeYamlBlock = markdownModel |> Seq.tryPick tryUnbox<FencedCodeBlock>            
-
-            let trimEndSingle (s:string) = 
-                if s.EndsWith("\n")
-                then s.Substring(0, s.Length-1)
-                else s
+            let markdownModel = Markdown.Parse(document, pipeline)      
+            
 
             let mapSection (node:MarkdigExtensions.HeadingHierarchy) (children:Section list) =
+                let maybeMeta = node.MetaBlock |> Option.map (MarkdigExtensions.MetaBlock.toYamlText >> Yaml.parseYaml) 
                 {
                     Level =
                         match node.Level with
                         | 0 -> SectionLevel.Root
                         | n -> SectionLevel.Heading n
-                    Meta = MetadataValue.default'
+                    Meta = maybeMeta |> Option.defaultValue MetadataValue.default'
                     ExclusiveText = node.SourceSpan |> MarkdigExtensions.spanToText document |> trimEndSingle
                     Children = children
                 }
@@ -142,52 +138,9 @@ module NoteModel =
             let headingHierarchy =
                 markdownModel
                 |> MarkdigExtensions.extractSectionHierarchy
+
             let sections =
                 headingHierarchy
                 |> MarkdigExtensions.HeadingHierarchy.cata mapSection
 
-                // What do I pass as state if I work bottom up? I have no end of document concept. I suppose all I really need from the previous is a position
-                // Can I transform the children and get position as state with a catamorphism? It wouldn't work if the tree was only one leaf...
-
-            if (MarkdigExtensions.HeadingHierarchy.preOrder headingHierarchy) |> List.length > 2 then
-                sections
-            else
-                match maybeHeading with
-                | Some heading ->
-                    let tryGetYamlFromCodeBlock (codeBlock:FencedCodeBlock) =
-                        let allowedIdentifiers = set ["yml"; "yaml"]
-                        if(allowedIdentifiers.Contains(codeBlock.Info))
-                        then
-                            codeBlock.Lines |> string |> Some
-                        else None
-
-                    let maybeMetaText = maybeYamlBlock |> Option.bind tryGetYamlFromCodeBlock
-                    let parsedMeta =
-                        match maybeMetaText with
-                        | Some metaYaml -> Yaml.parseYaml metaYaml
-                        | None -> MetadataValue.default'
-                    {
-                        Level = SectionLevel.Root
-                        Meta = sdict [] |> Complex
-                        ExclusiveText = ""
-                        Children = [
-                            {
-                                Level = SectionLevel.Heading 1
-                                Meta = parsedMeta
-                                ExclusiveText = document
-                                Children = []
-                            }
-                        ]
-                    }
-                | None ->
-                    let rootMeta =
-                        match yamlBlock with
-                        | Some ymlBlock -> ymlBlock |> MarkdigExtensions.blockToMarkdownText |> Yaml.parseYaml
-                        | None -> MetadataValue.Complex EquatableDictionary.empty
-
-                    {
-                        Level = SectionLevel.Root
-                        Meta = rootMeta
-                        ExclusiveText = document
-                        Children = []
-                    }
+            sections

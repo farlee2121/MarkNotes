@@ -338,6 +338,11 @@ Property tests waiting on expecto.FsCheck
 - round trip meta data
 - round trip hierarchy (can probably be same test as sections always sum to full document)
 
+Q: would the inheritance test be cleaner if I created meta hierarchies and converted them to yaml?
+- It would probably reduce hand-coded expectations
+
+TODO: the MarkDig extensions has grown into something else I should move out the heading hierarchy code and also find a better name for it
+
 Q: How do I generate tree arbs again?
 - FsCheck has some examples
 

@@ -41,19 +41,88 @@ string BlockToMarkdownText (MarkdownObject markdownNode){
 
 var document =
     """
-    # Title 
+    # h1
+
+    # Title
+
+
+
     ```yml
       rating: 5
       author: Spencer
       complex:
         hi: 5
     ```
+
+    I am a paragraph
+
+
     """;
 
-var pipeline = new MarkdownPipelineBuilder().UseYamlFrontMatter().EnableTrackTrivia().Build();
+var pipeline = new MarkdownPipelineBuilder().EnableTrackTrivia().UseYamlFrontMatter().Build();
 var markdownModel = Markdown.Parse(document, pipeline);
+// var markdownModel = Markdown.Parse(document, trackTrivia: true);
+
+// markdownModel.ToList().ForEach(n => {Console.WriteLine(n);});
 
 var codeBlock = markdownModel.Pick(TryUnbox<FencedCodeBlock>);
-codeBlock.Lines.ToString()
+Console.WriteLine("Code Block Text");
+Console.WriteLine(codeBlock.Lines.ToString());
+
+"Finding next block".Display();
+
+var heading = markdownModel.Pick(TryUnbox<HeadingBlock>);
+// $"Heading Line: {heading.Line}".Display();
+// $"CodeBlock Line: {codeBlock.Line}".Display();
+$"Heading LinesAfter: {heading.LinesAfter != null}".Display();
+heading.Lines.Count.Display();
+$"Heading Inline: {heading.Inline.Display()}".Display();
+$"CodeBlock Lines Before?: {heading.LinesBefore != null}".Display();
+$"Paragraph Before?: {markdownModel.Pick(TryUnbox<ParagraphBlock>)?.LinesBefore != null}".Display();
+
+// $"FindClosest from heading: {heading.FindClosestBlock(heading.Line + 1)}".Display()
+
+
+var maybeMetaFromLine = markdownModel.FindClosestBlock(heading.Line + 1);
+$"Closest Block: {maybeMetaFromLine}".Display();
+// $"As Code: {TryUnbox<FencedCodeBlock>(maybeMetaFromLine)}".Display();
+
+$"Heading Position: {heading.ToPositionText()}".Display();
+$"CodeBlock Position: {codeBlock.ToPositionText()}".Display();
+// heading.NewLine.Display();
+// var maybeMetaFromPosition = markdownModel.FindBlockAtPosition(heading.Span.End + 3);
+// $"Next By position: {BlockToMarkdownText(maybeMetaFromPosition)}".Display();
+// $"As Code: {TryUnbox<FencedCodeBlock>(maybeMetaFromPosition)}".Display();
+
+
+
+
+
 // BlockToMarkdownText(codeBlock.Lines)
 //.Select<MarkdownObject,string>(BlockToMarkdownText)
+
+#!markdown
+
+Q: can there be multi-line headers?
+
+Q: Can use FindClosestBlock from the heading and not the full document?
+- A: No. It finds nothing past it's own span
+
+Q: Will FindClosestBlock (correctly) not find the codeblock if there is empty space between the heading and block?
+- A: no. It will still find the code block
+- I could combat this by using the heading's trivia
+- Q: what trivia do I use?
+  - A: I've previously used LinesAfter (null vs non-empty)
+- Q: Why are LinesBefore and LinesAfter never populating?
+  - It doesn't work for heading or code block
+  - It does work for paragraph
+  - Q: is it considering the blank space paragraphs or some other block?
+    - A: no, the only blocks are the heading, code and expected paragraph. .Descendants also includes a "Markdig.Syntax.Inlines.LineBreakInline" as the end of the enumeration
+- I'm going to bail on it for now and accept a newline between heading and meta
+
+Q: Will FindBlockAtPosition not find the block if there is space between the heading?
+- A: No. If it lands between blocks then it gives you the whole document
+
+Q: Why is there a 3 char gap between the heading and code block? 
+- Q: Line endings?
+  - A: This appears to be the case 
