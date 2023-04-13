@@ -8,6 +8,8 @@ open System
 open YamlDotNet.Serialization
 open System.Collections.Generic
 open Notedown.BCLExtensions
+open Notedown.Internals.MarkdigSectionModel
+
 
 type MetadataValue =
     | SingleValue of string
@@ -123,8 +125,8 @@ module NoteModel =
             let markdownModel = Markdown.Parse(document, pipeline)      
             
 
-            let mapSection (node:MarkdigExtensions.HeadingHierarchy) (children:Section list) =
-                let maybeMeta = node.MetaBlock |> Option.map (MarkdigExtensions.MetaBlock.toYamlText >> Yaml.parseYaml) 
+            let mapSection (node:HeadingHierarchy) (children:Section list) =
+                let maybeMeta = node.MetaBlock |> Option.map (MetaBlock.toYamlText >> Yaml.parseYaml) 
                 {
                     Level =
                         match node.Level with
@@ -138,10 +140,10 @@ module NoteModel =
 
             let headingHierarchy =
                 markdownModel
-                |> MarkdigExtensions.extractSectionHierarchy
+                |> MarkdigSectionModel.extractSectionHierarchy
 
             let sections =
                 headingHierarchy
-                |> MarkdigExtensions.HeadingHierarchy.cata mapSection
+                |> MarkdigSectionModel.cata mapSection
 
             sections

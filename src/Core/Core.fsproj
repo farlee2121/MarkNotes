@@ -10,6 +10,7 @@
     <Compile Include="TreeUtils.fs" />
     <Compile Include="EquatableDictionary.fs" />
     <Compile Include="MarkdigExtensions.fs" />
+    <Compile Include="MarkdigSectionModel.fs" />
     <Compile Include="NoteModel.fs" />
     <Compile Include="TagExtraction.fs" />
   </ItemGroup>
