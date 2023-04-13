@@ -472,14 +472,41 @@ let metadataModelTests = testList "Note Model" [
                 expected =! actual
                 document =! Section.fullText actual
 
-                // PICKUP: Write more exclusive content tests. Then work on section meta. (don't forget full document reconstruction test)
-    // - for parent and child
-    // - root level content
-    // - propterty: section content shouldn't overlap and should sum to the original document
-    ]
-    
+        testCase
+            "should keep content exclusive between root and headings"
+            <| fun () ->
+                let sectionsText = [
+                    String.joinLines [
+                        "I am root contents"
+                        "> So much root content"
+                    ]
+                    String.joinLines [
+                        "## H2"
+                        "- I am contents"
+                        "- _I am also contents_"
+                    ]
+                    String.joinLines [
+                        "### H3"
+                        "- I am final content"
+                    ]
+                ]
+                let document = String.joinLines sectionsText
 
-    // not sure what's next. I think going straight to meta inheritance should be fine
+                let sectionFromText text children = [sectionFromTitle text children]
+
+                let expected = {
+                    Level = SectionLevel.Root
+                    Meta = MetadataValue.default'
+                    ExclusiveText = sectionsText.Head
+                    Children = List.foldBack sectionFromText sectionsText.Tail []
+                }
+
+                let actual = NoteModel.parse document
+
+                expected =! actual
+                document =! Section.fullText actual
+
+    ]
 ]
 
 

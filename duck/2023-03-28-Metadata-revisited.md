@@ -333,6 +333,11 @@ Pickup:
   - For consistency in mapping, probably treat root as a conditional branch of header meta
 
 
+Property tests waiting on expecto.FsCheck
+- sections always sum to full document
+- round trip meta data
+- round trip hierarchy (can probably be same test as sections always sum to full document)
+
 Q: How do I generate tree arbs again?
 - FsCheck has some examples
 
