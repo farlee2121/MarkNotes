@@ -13,6 +13,7 @@ These conventions aim to
 This repository contains tools for programmatically leveraging Notedown conventions: a CLI tool and an .NET library.
 
 ## Library / Code Model
+[![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/Notedown)](https://www.nuget.org/packages/Notedown)
 
 The code model is written in F# and follows F# design practices, but it can be used from any .NET language
 
@@ -112,7 +113,7 @@ TAGGED: This paragraph is tagged
 ```
 
 ## Notedown CLI
-[![](https://badgen.net/github/release/farlee2121/Notedown)](https://github.com/farlee2121/Notedown/releases) 
+[![](https://badgen.net/github/release/farlee2121/Notedown?label=zip)](https://github.com/farlee2121/Notedown/releases) [![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/Notedown.Cli)](https://www.nuget.org/packages/Notedown.Cli)
 
 ###  Tag Extraction
 
