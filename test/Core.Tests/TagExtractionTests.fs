@@ -2,8 +2,8 @@ module TagExtractionTests
 
 open System
 open Expecto
-open Notedown.Core
-open Notedown.BCLExtensions
+open Notedown
+open Notedown.Internal.BCLExtensions
 open UnquoteAliases
 
 let permute list =

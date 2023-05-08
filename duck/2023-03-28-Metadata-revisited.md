@@ -247,18 +247,7 @@ Q: How do I generate MetadataValue trees that I can be sure translate to valid Y
   - That should be possible in FsCheck 3 based on the work I did
   - Q: Can expecto work with fsCheck 3?
     - A: no
-  - Q: Is it much effort to create a migrated version of expecto?
-    - Apparently it is for me. I need to figure out how to work with Expecto's codebase better
-    - I'm getting a bunch of package warnings that tell me I should probably just split out a new project to kick the tires first
-    - But, i'm going to set it aside for now. Notedown progress takes precedence
-  - Q: What did StdGen change to?
-    - there are now two Rnd values passed, which I think are supposed to be seed and Gamma, but that doesn't quite check out
-    - I should be able to find it if I can find a use of TestResult.Failed (formerly TestResult.False )
-    - It changed to Rnd and Replay
-      - In my case, I think expecto wants Seed and Size
-  - PICKUP figure out why tests failing 
-    - make sure all the tests pass on main (they do)
-    - size vs gamma for replay (take a look at what FsCheck runner.fs config used for replay before)? 
+    - notes on this exploration moved to 2023-04-17-expecto-fscheck3.md
 
 Q: What should I collect when crawling for sections?
 - OPT: I could return full sections directly

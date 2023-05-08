@@ -1,4 +1,4 @@
-namespace Notedown.Core
+namespace Notedown.Internal
 module TreeUtils =
     open System.Collections.Generic 
 

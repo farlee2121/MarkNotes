@@ -1,4 +1,4 @@
-namespace Notedown.Internals.MarkdigSectionModel
+namespace Notedown.Internal.MarkdigSectionModel
 
 open System.Collections.Generic
 open Markdig.Extensions.Yaml

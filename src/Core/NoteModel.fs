@@ -1,4 +1,4 @@
-namespace Notedown.Core
+namespace Notedown
 
 
 open Markdig
@@ -7,8 +7,8 @@ open System.IO
 open System
 open YamlDotNet.Serialization
 open System.Collections.Generic
-open Notedown.BCLExtensions
-open Notedown.Internals.MarkdigSectionModel
+open Notedown.Internal.BCLExtensions
+open Notedown.Internal.MarkdigSectionModel
 
 
 type MetadataValue =

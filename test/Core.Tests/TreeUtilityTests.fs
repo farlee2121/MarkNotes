@@ -1,7 +1,7 @@
 module TreeUtilityTests
 
 open Expecto
-open Notedown.Core
+open Notedown.Internal
 open UnquoteAliases
 
 

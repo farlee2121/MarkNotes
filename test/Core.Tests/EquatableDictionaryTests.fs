@@ -1,7 +1,7 @@
 module EquatableDictionaryTest
 
 open Expecto
-open Notedown.BCLExtensions
+open Notedown.Internal.BCLExtensions
 open UnquoteAliases
 open Swensen.Unquote.Assertions
 open System.Collections.Generic

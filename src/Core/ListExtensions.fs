@@ -1,4 +1,4 @@
-namespace Notedown.BCLExtensions
+namespace Notedown.Internal.BCLExtensions
 
 module List =
     let headOr list default' =
