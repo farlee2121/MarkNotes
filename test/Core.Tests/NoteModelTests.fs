@@ -13,7 +13,7 @@ open ExpectoExtensions
 
 type DictLikeness<'key,'value> = ('key * 'value) list
 
-module DictLikeness = 
+module DictLikeness =
     let fromDict (dictionary: Dictionary<'key,'value>) = [for kvp in dictionary -> (kvp.Key, kvp.Value)]
 
 
@@ -28,20 +28,20 @@ with
 type FsCheckExtensions () =
     let regexGen pattern = gen {
             let xeger = Fare.Xeger pattern
-            return xeger.Generate() 
+            return xeger.Generate()
         }
     static member NoHeadingsString () =
         gen {
             let xeger = Fare.Xeger "[^#]"
-            return xeger.Generate() 
+            return xeger.Generate()
         } |> Arb.fromGen
 
     static member MetaSingle() =
         Arb.generate<string>
         |> Gen.map MetadataValue.SingleValue
         |> Arb.fromGen
-        
-let testProperty' name test = 
+
+let testProperty' name test =
     testPropertyWithConfig { FsCheckConfig.defaultConfig with arbitrary = [typeof<FsCheckExtensions>] } name test
 
 
@@ -194,7 +194,7 @@ let metadataModelTests = testList "Note Model" [
                             "foo", SingleValue "5"
                             "bar", MetadataValue.fromPairs [
                                 "baz", SingleValue "8"
-                            ] 
+                            ]
                         ]
                     ]
                     ExclusiveText = document
@@ -296,7 +296,7 @@ let metadataModelTests = testList "Note Model" [
 
     ]
 
-    testList "Children" [       
+    testList "Children" [
 
         testCase
             "should parse increasing header levels as siblings of the root document"
@@ -310,12 +310,12 @@ let metadataModelTests = testList "Note Model" [
                 let document = String.joinLines lines
 
                 let sectionFromTitle' title = sectionFromTitle title []
-            
+
                 let expected = {
                     Level = SectionLevel.Root
                     Meta = MetadataValue.default'
                     ExclusiveText = ""
-                    Children = 
+                    Children =
                         lines |> List.map sectionFromTitle'
                 }
 
@@ -335,7 +335,7 @@ let metadataModelTests = testList "Note Model" [
                 let document = String.joinLines lines
 
                 let sectionFromTitle' title = sectionFromTitle title []
-            
+
                 let expected = {
                     Level = SectionLevel.Root
                     Meta = MetadataValue.default'
@@ -367,8 +367,8 @@ let metadataModelTests = testList "Note Model" [
                     Level = SectionLevel.Root
                     Meta = MetadataValue.default'
                     ExclusiveText = ""
-                    Children = 
-                         List.foldBack sectionFromTitle' lines [] 
+                    Children =
+                         List.foldBack sectionFromTitle' lines []
                 }
 
                 let actual = NoteModel.parse document
@@ -439,7 +439,7 @@ let metadataModelTests = testList "Note Model" [
                     Level = SectionLevel.Root
                     Meta = MetadataValue.default'
                     ExclusiveText = ""
-                    Children = sectionsText |> List.map sectionFromText 
+                    Children = sectionsText |> List.map sectionFromText
                 }
 
                 let actual = NoteModel.parse document
@@ -631,7 +631,20 @@ let metadataModelTests = testList "Note Model" [
 
                 expected =! actual
 
-        testList "Meta Merge" [
+    ]
+
+    testList "MetadataValue" [
+
+        testCase "default should not mutate" <| fun () ->
+            let m = MetadataValue.default'
+            match m with
+            | Complex d -> d["hi"] <- SingleValue "hey"
+            | _ -> ()
+            Complex (sdict []) =! MetadataValue.default'
+            
+
+        testList "merge" [
+
             testProperty' "SingleValues are replaced by override"
             <| fun (target:MetaSingle, overrides:MetaSingle) ->
                 let expected = overrides.Get
@@ -727,6 +740,49 @@ let metadataModelTests = testList "Note Model" [
                 let actual = MetadataValue.merge target overrides
 
                 expected =! actual
+        ]
+
+        testList "select/set" [
+            let genSelectorSegment _ = Guid.NewGuid ()
+            let genSelector depth =
+                List.init depth genSelectorSegment|> List.map string |> String.join "."
+
+            testCase "it should return none if a value doesn't exist at the given selector" <| fun () ->
+                let meta = MetadataValue.default'
+                let depth = System.Random.Shared.Next(10)
+                let selector = genSelector depth
+                None =! MetadataValue.trySelect selector meta
+
+            testCase "select should roundtrip with clobber at the root level" <| fun () ->
+
+                let meta = MetadataValue.default'
+                let expected = Guid.NewGuid().ToString()
+                let selector = ""
+
+                let updatedMeta = MetadataValue.clobber selector meta (SingleValue expected)
+                let actual = MetadataValue.trySelectSingle selector updatedMeta
+                Some expected =! actual
+
+            testCase "select should roundtrip with clobber at any level" <| fun () ->
+
+                let meta = MetadataValue.default'
+                let expected = Guid.NewGuid().ToString()
+                let selector = genSelector (System.Random.Shared.Next(10))
+
+                let updatedMeta = MetadataValue.clobber selector meta (SingleValue expected)
+                let actual = MetadataValue.trySelectSingle selector updatedMeta
+                Some expected =! actual
+
+            testCase "clobber should overwrite intermediate values to create the right path" <| fun () ->
+
+                let meta = SingleValue "hi"
+                let expected = Guid.NewGuid().ToString()
+                let selector = genSelector (System.Random.Shared.Next(10))
+
+                let updatedMeta = MetadataValue.clobber selector meta (SingleValue expected)
+                let actual = MetadataValue.trySelectSingle selector updatedMeta
+                Some expected =! actual
+
         ]
     ]
 ]

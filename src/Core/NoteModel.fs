@@ -15,9 +15,10 @@ type MetadataValue =
     | SingleValue of string
     | Vector of MetadataValue list
     | Complex of EquatableDictionary<string, MetadataValue>
+with
+    static member default' = Complex EquatableDictionary.empty
 
 module MetadataValue =
-    let default' = Complex EquatableDictionary.empty
     let fromPairs t = sdict t |> Complex
 
     let merge (target:MetadataValue) (overrides:MetadataValue) =
@@ -27,17 +28,77 @@ module MetadataValue =
                 let merged = EquatableDictionary(t)
                 for key in o.Keys do
                     if(merged.ContainsKey(key))
-                    then merged[key] <- recurse t[key] o[key] 
+                    then merged[key] <- recurse t[key] o[key]
                     else merged[key] <- o[key]
-                    
+
                 Complex merged
             | (Vector t, Vector o) -> Vector o
             | (_, over) -> over
 
         recurse target overrides
 
+
+    module internal Selector =
+        let segments selector = selector |> String.split "."
+
+    /// Get the metadata value at the given path if it exists
+    /// Paths are . delimited. I.e `root.config.some-nested-property`
+    let trySelect (selector: string) (meta :MetadataValue): MetadataValue option =
+        let rec recurse relativePath relativeMeta =
+            match relativePath, relativeMeta with
+            | [], meta -> Some meta
+            | localSelector::remainingPath, Complex dict ->
+                if dict.ContainsKey localSelector then
+                    recurse remainingPath dict[localSelector]
+                else
+                    None     
+            | _ -> None
+
+        if selector = ""
+        then Some meta
+        else 
+            let pathSegments = selector |> Selector.segments |> List.ofArray
+            recurse pathSegments meta
+
+    /// Get the metadata value at the given path if it exists and is a simple value
+    /// Paths are . delimited. I.e `root.config.some-nested-property`
+    let trySelectSingle (selector: string) (meta :MetadataValue) : string option =
+        match trySelect selector meta with
+        | Some (SingleValue metaVal) -> Some metaVal
+        | _ -> None
+
+    /// Set the value at a given path, creating the path if it doesn't exist and overwriting any mid-level values if necessary.
+    /// For example, if you have config `{routes: ["r1", "r2"]}` and you call clobber with path "routes.home",
+    /// it will overwrite the config to `{ routes: { home: given-value }}`
+    let clobber (selector: string) (meta: MetadataValue) (value: MetadataValue) =
+        let rec recurse relativePath relativeMeta =
+            match relativePath, relativeMeta with
+            | [], meta -> value
+            | localSelector::remainingPath, Complex dict ->
+                if dict.ContainsKey localSelector then
+                    dict[localSelector] <- recurse remainingPath dict[localSelector]
+                    Complex dict
+                else
+                    dict[localSelector] <- recurse remainingPath MetadataValue.default'
+                    Complex dict
+            | localSelector::remainingPath, _ ->
+                let dict = EquatableDictionary.empty
+                dict[localSelector] <- recurse remainingPath MetadataValue.default'
+                Complex dict
+
+        if selector = ""
+        then value
+        else
+            let pathSegments = selector |> Selector.segments |> List.ofArray
+            recurse pathSegments meta
+
+        
+
+
+
+
 type HeadingLevel = int
-type SectionLevel = 
+type SectionLevel =
     | Root
     | Heading of HeadingLevel
 
@@ -52,13 +113,13 @@ module Section =
     /// Forward traverse section with a tracked state. Can modify sections while preserving structure/hierarchy
     let mapFold (mapf: 'state -> Section -> (Section*'state)) (state: 'state) (section: Section) : (Section *'state) =
         let rec recurse state section =
-            let mapped, state = mapf state section 
+            let mapped, state = mapf state section
             let childrenMapped, state = List.mapFold recurse state mapped.Children
             {mapped with Children = childrenMapped}, state
         recurse state section
 
 
-    let fullText (section:Section) = 
+    let fullText (section:Section) =
         let mapf state (section:Section) = (section, section.ExclusiveText :: state)
         let _,textInReverseOrder = mapFold mapf [] section
 
@@ -72,7 +133,7 @@ module Section =
             | l -> l
 
         textInOrder |> trimRootIfEmpty |> String.joinLines
- 
+
 type Section with
     member this.FullText() =
         Section.fullText this
@@ -99,12 +160,12 @@ module NoteModel =
                 | :? YamlScalarNode as scalar -> scalar.Value |> MetadataValue.SingleValue
                 | :? YamlSequenceNode as vec -> vec.Children |> Seq.map recurse |> List.ofSeq |> MetadataValue.Vector
                 | :? YamlMappingNode as map ->
-                    map.Children |> Seq.map (mapKvp extractMapKey recurse) |> EquatableDictionary |> MetadataValue.Complex 
+                    map.Children |> Seq.map (mapKvp extractMapKey recurse) |> EquatableDictionary |> MetadataValue.Complex
                 | node -> MetadataValue.SingleValue $"Unsupported yaml: {node |> nodeToText}"
 
             recurse node
-        
-    
+
+
         let internal parseYaml text =
             let yamlStream = YamlStream();
             yamlStream.Load(new StringReader(text))
@@ -118,7 +179,7 @@ module NoteModel =
                 |> Option.bind tryMappingNode
 
             match yamlRoot with
-            | Some root -> root |> yamlNodeToMetaModel 
+            | Some root -> root |> yamlNodeToMetaModel
             | None -> MetadataValue.Complex EquatableDictionary.empty
 
 
@@ -144,7 +205,7 @@ module NoteModel =
 
     let parse (document: string) : Section =
 
-        let trimEndSingle (s:string) = 
+        let trimEndSingle (s:string) =
                 if s.EndsWith("\n")
                 then s.Substring(0, s.Length-1)
                 else s
@@ -159,11 +220,11 @@ module NoteModel =
         else
 
             let pipeline = MarkdownPipelineBuilder().UseAdvancedExtensions().UseYamlFrontMatter().EnableTrackTrivia().Build()
-            let markdownModel = Markdown.Parse(document, pipeline)      
-            
+            let markdownModel = Markdown.Parse(document, pipeline)
+
 
             let mapSection (node:HeadingHierarchy) (children:Section list) =
-                let maybeMeta = node.MetaBlock |> Option.map (MetaBlock.toYamlText >> Yaml.parseYaml) 
+                let maybeMeta = node.MetaBlock |> Option.map (MetaBlock.toYamlText >> Yaml.parseYaml)
                 {
                     Level =
                         match node.Level with
