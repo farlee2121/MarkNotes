@@ -64,6 +64,9 @@ let trimLast list =
     let lastSection : Section = List.last list
     list |> List.updateAt lastIndex { lastSection with ExclusiveText = lastSection.ExclusiveText.TrimEnd()}
 
+type SelectError = Result<string option, MetadataValue.SetFailureReason>
+
+
 [<Tests>]
 let metadataModelTests = testList "Note Model" [
     testCase
@@ -633,6 +636,7 @@ let metadataModelTests = testList "Note Model" [
 
     ]
 
+
     testList "MetadataValue" [
 
         testCase "default should not mutate" <| fun () ->
@@ -742,10 +746,11 @@ let metadataModelTests = testList "Note Model" [
                 expected =! actual
         ]
 
-        testList "select/set" [
-            let genSelectorSegment _ = Guid.NewGuid ()
-            let genSelector depth =
-                List.init depth genSelectorSegment|> List.map string |> String.join "."
+        let genSelectorSegment _ = Guid.NewGuid ()
+        let genSelector depth =
+            List.init depth genSelectorSegment|> List.map string |> String.join "."
+        testList "select/clobber" [
+            
 
             testCase "it should return none if a value doesn't exist at the given selector" <| fun () ->
                 let meta = MetadataValue.default'
@@ -782,6 +787,89 @@ let metadataModelTests = testList "Note Model" [
                 let updatedMeta = MetadataValue.clobber selector meta (SingleValue expected)
                 let actual = MetadataValue.trySelectSingle selector updatedMeta
                 Some expected =! actual
+
+            testCase "should pass this demonstrative example" <| fun () ->
+                let meta = (Complex << sdict) [
+                    "level1", (Complex << sdict) [
+                        "level2", (Complex << sdict) [
+                            "level3", SingleValue "target"
+                        ]
+                    ]
+                ]
+                let selector = "level1.level2.level3"
+
+                Some "target" =! MetadataValue.trySelectSingle selector meta
+
+                let updated = MetadataValue.clobber selector meta (SingleValue "hit!")
+                Some "hit!" =! MetadataValue.trySelectSingle selector updated
+
+
+        ]
+
+        testList "select/trySet" [
+
+            testCase "trySet will not overwrite the root" <| fun () ->
+
+                let meta = MetadataValue.default'
+                let writeValue = Guid.NewGuid().ToString()
+                let selector = ""
+
+                let updatedMeta = MetadataValue.trySet selector meta (SingleValue writeValue)
+                let expected = (Error << MetadataValue.SetFailureReason.WouldOverwrite) {Path = selector; Value = meta }
+                let actual = updatedMeta |> Result.map (MetadataValue.trySelectSingle selector) 
+                expected =! actual
+
+            testCase "trySet will succeed for any non-existant path" <| fun () ->
+
+                let meta = MetadataValue.default'
+                let writeValue = Guid.NewGuid().ToString()
+                let selector = genSelector (System.Random.Shared.Next(1,10))
+
+                let expected = (Ok << Some) writeValue
+                let updatedMeta = MetadataValue.trySet selector meta (SingleValue writeValue)
+                let actual = updatedMeta |> Result.map (MetadataValue.trySelectSingle selector) 
+                expected =! actual
+
+            testCase "trySet will succeed for any non-destructive path" <| fun () ->
+
+                let writeValue = Guid.NewGuid().ToString()
+                let selector = genSelector (System.Random.Shared.Next(1,10))
+                let pathEnsured = MetadataValue.clobber selector MetadataValue.default' (SingleValue writeValue)
+
+                let expected = (Ok << Some) writeValue
+                let updatedMeta = MetadataValue.trySet selector pathEnsured (SingleValue writeValue)
+                let actual = updatedMeta |> Result.map (MetadataValue.trySelectSingle selector) 
+                expected =! actual
+
+            testCase "trySet will not overwrite SingleValues to create the right path" <| fun () ->
+
+                let writeValue = Guid.NewGuid().ToString()
+                let depth = System.Random.Shared.Next(1,10)
+                let selector = genSelector depth
+
+                let overwriteDepth = System.Random.Shared.Next(0,depth)
+                let overwriteLocation = selector |> MetadataValue.Selector.segments |> Array.take overwriteDepth |> MetadataValue.Selector.join
+                let overwriteValue = (SingleValue "hi")
+
+                let overwriteEnsured = MetadataValue.clobber overwriteLocation MetadataValue.default' overwriteValue
+
+                let expected = (Error << MetadataValue.SetFailureReason.WouldOverwrite) {Path = overwriteLocation; Value = overwriteValue }
+                let actual = MetadataValue.trySet selector overwriteEnsured (SingleValue writeValue)
+                expected =! actual
+
+            testCase "should pass this demonstrative example" <| fun () ->
+                let meta = (Complex << sdict) [
+                    "level1", (Complex << sdict) [
+                        "level2", (Complex << sdict) [
+                            "level3", SingleValue "target"
+                        ]
+                    ]
+                ]
+                let selector = "level1.level2.level3"
+
+                let updated = MetadataValue.trySet selector meta (SingleValue "hit!")
+                (Ok << Some) "hit!" =! (updated |> Result.map (MetadataValue.trySelectSingle selector))
+
 
         ]
     ]

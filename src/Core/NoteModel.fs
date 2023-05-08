@@ -38,8 +38,10 @@ module MetadataValue =
         recurse target overrides
 
 
-    module internal Selector =
-        let segments selector = selector |> String.split "."
+    module Selector =
+        let private separator = "."
+        let segments selector = selector |> String.split separator
+        let join segments = segments |> String.join separator
 
     /// Get the metadata value at the given path if it exists
     /// Paths are . delimited. I.e `root.config.some-nested-property`
@@ -92,8 +94,28 @@ module MetadataValue =
             let pathSegments = selector |> Selector.segments |> List.ofArray
             recurse pathSegments meta
 
-        
+    type OverwriteLocation = { Path: string; Value: MetadataValue}
+    type SetFailureReason = | WouldOverwrite of OverwriteLocation
+    let trySet (selector: string) (meta: MetadataValue) (value: MetadataValue) : Result<MetadataValue,SetFailureReason>  =
+        let rec recurse heritage relativePath relativeMeta =
+            match relativePath, relativeMeta with
+            | [], meta -> Ok value
+            | localSelector::remainingPath, Complex dict ->
+                let recurseMeta = if dict.ContainsKey localSelector then dict[localSelector] else MetadataValue.default'
+                recurse (localSelector::heritage) remainingPath recurseMeta
+                |> Result.map (fun updatedChild ->
+                    dict[localSelector] <- updatedChild
+                    Complex dict
+                )
+            | localSelector::remainingPath, localValue ->
+                let path = heritage |> List.rev |> Selector.join
+                Error (WouldOverwrite {Path =path;  Value = localValue})
 
+        if selector = ""
+        then Error (WouldOverwrite {Path = ""; Value = meta})
+        else
+            let pathSegments = selector |> Selector.segments |> List.ofArray
+            recurse [] pathSegments meta
 
 
 

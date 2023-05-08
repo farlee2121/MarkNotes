@@ -34,6 +34,7 @@ Q: What format do I use for the selector?
 	- hmm. even with square brackets I think I still want the `.`, it just reads better. That also makes it easier ot support that style. I just have to trim the braces and see if it's a number
 
 Q: Should I let them set the root value?
+- I think I will for clobber, but not trySet
 
 Q: What should I do if they try to set a value with a non-complex value in the hierarchy?
 - i.e. `config { routes: ["", ""] }` but they try to set `config.routes.home`
@@ -53,16 +54,14 @@ Q: I'm not loving the meta names. Should I change them to something else?
 
 
 PROBLEM: if I support writing, then I also need to validate path segments. They can't contain any chars invalid in a json key
+- I suppose I can just let it error if/when they try to serialize it 
 
 
 
 More test cases to consider
 - support array indexing
+  - trySet succeeds if a valid array index is specified at expected portion of selector
 - clobber 
-  - fails if the path selector is invalid
+  - fails if the path selector is invalid?
 - trySet (non-clobbering)
-  - sets if intermediate values are all of expected type (array or complex depending on selector)
-  - doesn't set if any intermediate types would be overwritten
-  - can set at root level
-  - can set at any level
-  - fails if the selector is invalid
+  - fails if the selector is invalid?
