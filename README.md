@@ -83,8 +83,32 @@ List-like values become `Vector`. Key-value maps become `Complex`. And values be
 All meta is read as a string and interpretation is left to the consumer.
 Yaml is currently the only supported meta format.
 
-More work needs to be done for conveniently accessing metadata values at a given path.
-E.g. getting the value at `config.routes.home`
+There are a few helpers for setting specific meta values. Suppose we have meta as follows
+```
+---
+date: 0000-00-00
+config: 
+  sub-group:
+    rating: 5
+    tags: ["tag", "other tag"]
+---
+```
+
+We can get specific values with path selectors
+
+```fsharp
+MetadataValue.trySelect "config.sub-group.rating" // returns Some SingleValue "5"
+MetadataValue.trySelect "config.sub-group.tags" // returns Some Vector ["tag", "other tag"]
+
+MetadataValue.trySelectSingle "config.sub-group.rating" // returns Some "5"
+MetadataValue.trySelectSingle "config.sub-group.nope" // returns None
+MetadataValue.trySelectSingle "config.sub-group.tags" // returns None because tags is an array, not a single value
+```
+
+There are two options for setting values by path `clobber` and `trySet`. Clobber will create the desired path, even if it overwrites intermediate values.
+TrySet will only write if it doesn't overwrite intermediate values. If it detects an overwrite, it'll return and error with the location and conflicting value.
+
+Array indexes are not currently supported as part of selector paths.
 
 ### Tag Extraction
 The other main feature is tag extraction
