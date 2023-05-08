@@ -1,21 +1,38 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <AssemblyName>Notedown.Core</AssemblyName>
-    <RootNamespace>Notedown.Core</RootNamespace>
-  </PropertyGroup>
-  <ItemGroup>
-    <Compile Include="ListExtensions.fs" />
-    <Compile Include="StringExtensions.fs" />
-    <Compile Include="TreeUtils.fs" />
-    <Compile Include="EquatableDictionary.fs" />
-    <Compile Include="MarkdigExtensions.fs" />
-    <Compile Include="MarkdigSectionModel.fs" />
-    <Compile Include="NoteModel.fs" />
-    <Compile Include="TagExtraction.fs" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Markdig" Version="0.26.0" />
-    <PackageReference Include="YamlDotNet" Version="13.0.2" />
-  </ItemGroup>
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<AssemblyName>Notedown.Core</AssemblyName>
+		<RootNamespace>Notedown.Core</RootNamespace>
+	</PropertyGroup>
+	<PropertyGroup>
+		<PackageId>Notedown</PackageId>
+		<Title>Notedown</Title>
+		<VersionPrefix>0.1.0</VersionPrefix>
+		<Description>
+			Notedown is a set of note-taking conventions for markdown that double as a light data format. 
+			This tool enables programmatic interaction with notes based on those conventions.
+		</Description>
+		<Authors>Spencer Farley</Authors>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<RepositoryUrl>https://github.com/farlee2121/Notedown</RepositoryUrl>
+		<PackageTags>notes;markdown;convention</PackageTags>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+	</PropertyGroup>
+	<ItemGroup>
+		<Compile Include="ListExtensions.fs" />
+		<Compile Include="StringExtensions.fs" />
+		<Compile Include="TreeUtils.fs" />
+		<Compile Include="EquatableDictionary.fs" />
+		<Compile Include="MarkdigExtensions.fs" />
+		<Compile Include="MarkdigSectionModel.fs" />
+		<Compile Include="NoteModel.fs" />
+		<Compile Include="TagExtraction.fs" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Include="..\..\README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Markdig" Version="0.26.0" />
+		<PackageReference Include="YamlDotNet" Version="13.0.2" />
+	</ItemGroup>
 </Project>
