@@ -163,3 +163,10 @@ SOURCE: a few good articles on balancing CI/CD with semantic versioning.
 - [ ] add rule descriptions to the CLI help?
 - [ ] Package as dotnet tool
 - [ ] Package core as library
+
+
+## Logo Idea
+
+Since I use notedown for duck docs, perhaps the logo should be a rubber duck with the markdown down arrow on it.
+A notebook with the down arrow on it would also be good.
+OH! Duck down is also a great name I could use if I end up making something duck specific
